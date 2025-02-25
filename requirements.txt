@@ -1,0 +1,6 @@
+Flask
+flask_login
+bcrypt
+gunicorn
+python-dotenv
+openai

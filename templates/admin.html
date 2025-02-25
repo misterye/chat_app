@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>管理员后台</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h2>用户管理</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editUser({{ user.id }})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteUser({{ user.id }})">删除</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h3>添加用户</h3>
+        <form method="post">
+            <input type="hidden" name="action" value="add">
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">添加</button>
+        </form>
+    </div>
+    <script>
+        function deleteUser(userId) {
+            if (confirm('确定删除该用户？')) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/admin';
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete';
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'user_id';
+                idInput.value = userId;
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        // 编辑功能可类似实现
+    </script>
+</body>
+</html>
