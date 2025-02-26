@@ -42,6 +42,8 @@ def get_db_connection():
 
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('chat'))
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -54,11 +56,20 @@ def login():
         c.execute('SELECT * FROM users WHERE username = ?', (username,))
         user = c.fetchone()
         conn.close()
+        
         if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
             user_obj = User(user['id'], user['username'], user['is_admin'])
             login_user(user_obj)
-            return redirect(url_for('chat'))
-        return 'Invalid username or password'
+            # 修改：返回正确的 JSON 响应
+            return jsonify({
+                'success': True,
+                'redirect': url_for('chat')
+            })
+        # 修改：返回错误的 JSON 响应
+        return jsonify({
+            'success': False,
+            'error': '用户名或密码错误，请稍后重试！'
+        }), 401  # 添加适当的状态码
     return render_template('login.html')
 
 @app.route('/logout')
@@ -83,7 +94,7 @@ def admin():
             c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
         elif action == 'delete':
             user_id = request.form['user_id']
-            c.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            c.execute('DELETE FROM users WHERE id = ? AND is_admin = 0', (user_id,))  # 防止删除管理员
             c.execute('DELETE FROM chat_history WHERE user_id = ?', (user_id,))
         elif action == 'update':
             user_id = request.form['user_id']
@@ -95,8 +106,24 @@ def admin():
             else:
                 c.execute('UPDATE users SET username = ? WHERE id = ?', (username, user_id))
         conn.commit()
-    c.execute('SELECT id, username FROM users')
-    users = c.fetchall()
+    
+    # 修改查询以包含 is_admin 字段
+    c.execute('''
+        SELECT users.id, users.username, users.is_admin,
+               COUNT(chat_history.id) as chat_count
+        FROM users
+        LEFT JOIN chat_history ON users.id = chat_history.user_id
+        GROUP BY users.id, users.username, users.is_admin
+    ''')
+    users = [
+        {
+            'id': row['id'],
+            'username': row['username'],
+            'is_admin': bool(row['is_admin']),  # 确保转换为布尔值
+            'chat_count': row['chat_count']
+        }
+        for row in c.fetchall()
+    ]
     conn.close()
     return render_template('admin.html', users=users)
 
@@ -117,39 +144,76 @@ def new_chat():
     conn.close()
     return jsonify({'chat_id': chat_id})
 
-@app.route('/chat/history', methods=['GET'])
+@app.route('/chat/history')
 @login_required
-def get_history():
+def get_chat_history():
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute('SELECT id, title, created_at FROM chat_history WHERE user_id = ? ORDER BY created_at DESC',
+    c.execute('SELECT id, title FROM chat_history WHERE user_id = ? ORDER BY created_at DESC', 
               (current_user.id,))
-    history = c.fetchall()
+    history = [{'id': row[0], 'title': row[1]} for row in c.fetchall()]
     conn.close()
-    return jsonify([{'id': row['id'], 'title': row['title'], 'created_at': row['created_at']} for row in history])
+    return jsonify(history)
 
-@app.route('/chat/history/<int:history_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/chat/history/<int:chat_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def manage_history(history_id):
+def manage_chat(chat_id):
     conn = get_db_connection()
     c = conn.cursor()
+    
+    # 验证权限
+    c.execute('SELECT user_id FROM chat_history WHERE id = ?', (chat_id,))
+    chat = c.fetchone()
+    if not chat or chat[0] != current_user.id:
+        conn.close()
+        return jsonify({'error': 'Unauthorized'}), 403
+
     if request.method == 'GET':
-        c.execute('SELECT content FROM chat_history WHERE id = ? AND user_id = ?', (history_id, current_user.id))
-        chat = c.fetchone()
-        if chat:
-            return jsonify(json.loads(chat['content']))
-        return 'Chat not found', 404
+        c.execute('SELECT content FROM chat_history WHERE id = ?', (chat_id,))
+        content = c.fetchone()[0]
+        messages = json.loads(content) if content else []
+        conn.close()
+        return jsonify(messages)
+    
     elif request.method == 'PUT':
-        title = request.json['title']
-        c.execute('UPDATE chat_history SET title = ? WHERE id = ? AND user_id = ?',
-                  (title, history_id, current_user.id))
+        data = request.json
+        c.execute('UPDATE chat_history SET title = ? WHERE id = ?', 
+                  (data['title'], chat_id))
         conn.commit()
-        return 'OK'
+        conn.close()
+        return jsonify({'success': True})
+    
     elif request.method == 'DELETE':
-        c.execute('DELETE FROM chat_history WHERE id = ? AND user_id = ?', (history_id, current_user.id))
+        c.execute('DELETE FROM chat_history WHERE id = ?', (chat_id,))
         conn.commit()
-        return 'OK'
-    conn.close()
+        conn.close()
+        return jsonify({'success': True})
+
+@app.route('/chat/send', methods=['POST'])
+@login_required
+def send_message():
+    # 删除此函数，因为已经有 handle_message 处理消息
+    pass
+
+def limit_context(messages, max_tokens=2000):
+    """限制上下文长度"""
+    total_tokens = 0
+    limited_messages = []
+    
+    for msg in reversed(messages):
+        estimated_tokens = len(msg['content']) // 4  # 粗略估计token数
+        if total_tokens + estimated_tokens > max_tokens:
+            break
+        limited_messages.insert(0, msg)
+        total_tokens += estimated_tokens
+    
+    return limited_messages
+
+def generate_title(first_message):
+    """根据第一条消息生成标题"""
+    if len(first_message) > 20:
+        return first_message[:20] + "..."
+    return first_message
 
 # 初始化 Groq 客户端
 client = OpenAI(
@@ -170,12 +234,10 @@ def send_message(message, history_id):
         
         content = json.loads(chat['content'])
         
-        # 准备消息列表
-        messages = [
-            {"role": "system", "content": "你是一个有帮助的助手。"},
-        ]
+        # 准备消息列表，删除系统提示
+        messages = []
         # 添加历史消息
-        messages.extend([{"role": msg["role"], "content": msg["content"]} for msg in content])
+        messages.extend(limit_context([{"role": msg["role"], "content": msg["content"]} for msg in content]))
         # 添加新消息
         messages.append({"role": "user", "content": message})
 
@@ -183,8 +245,8 @@ def send_message(message, history_id):
         response = client.chat.completions.create(
             model="deepseek-r1-distill-llama-70b",  # 或其他支持的模型
             messages=messages,
-            temperature=0.7,
-            max_tokens=1000
+            temperature=0.6,
+            max_tokens=32768
         )
 
         # 获取回复内容
@@ -195,6 +257,12 @@ def send_message(message, history_id):
         c = conn.cursor()
         content.append({'role': 'user', 'content': message})
         content.append({'role': 'assistant', 'content': assistant_message})
+        
+        # 如果是新对话，生成标题
+        if len(content) == 2:  # 第一轮对话
+            title = generate_title(message[:20])
+            c.execute('UPDATE chat_history SET title = ? WHERE id = ?', (title, history_id))
+            
         c.execute('UPDATE chat_history SET content = ? WHERE id = ?', (json.dumps(content), history_id))
         conn.commit()
         conn.close()
@@ -220,6 +288,93 @@ def handle_message():
         
     except Exception as e:
         print(f"Error handling message: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/<int:user_id>/chats')
+@login_required
+def get_user_chats(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # 获取用户的所有聊天记录
+        c.execute('''
+            SELECT id, title, content, created_at 
+            FROM chat_history 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+        ''', (user_id,))
+        
+        chats = []
+        for row in c.fetchall():
+            chat = {
+                'id': row['id'],
+                'title': row['title'],
+                'created_at': row['created_at'],
+                'messages': json.loads(row['content']) if row['content'] else []
+            }
+            chats.append(chat)
+            
+        conn.close()
+        return jsonify(chats)
+        
+    except Exception as e:
+        print(f"Error getting user chats: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chat/<int:chat_id>', methods=['DELETE'])
+@login_required
+def delete_chat(chat_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # 验证聊天记录是否存在
+        c.execute('SELECT id FROM chat_history WHERE id = ?', (chat_id,))
+        if not c.fetchone():
+            conn.close()
+            return jsonify({'error': '聊天记录不存在'}), 404
+            
+        # 删除聊天记录
+        c.execute('DELETE FROM chat_history WHERE id = ?', (chat_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error deleting chat: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/<int:user_id>')
+@login_required
+def get_user_info(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT id, username, is_admin FROM users WHERE id = ?', (user_id,))
+        user = c.fetchone()
+        conn.close()
+        
+        if user:
+            return jsonify({
+                'id': user['id'],
+                'username': user['username'],
+                'is_admin': bool(user['is_admin'])
+            })
+        return jsonify({'error': '用户不存在'}), 404
+        
+    except Exception as e:
+        print(f"Error getting user info: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

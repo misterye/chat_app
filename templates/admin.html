@@ -2,68 +2,542 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>管理员后台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台 - 小智</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .top-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .welcome-text {
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .welcome-text i {
+            font-size: 1.5em;
+            color: #9d4edd;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 90px auto 30px;
+            padding: 0 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            color: white;
+            padding: 20px;
+            font-weight: 600;
+            border-bottom: none;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .table thead {
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            color: white;
+        }
+        
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+            padding: 15px;
+            border: none;
+        }
+        
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(157, 78, 221, 0.05);
+        }
+        
+        .btn-action {
+            margin: 0 5px;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-warning {
+            background-color: #f9a826;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 10px rgba(249, 168, 38, 0.3);
+        }
+        
+        .btn-info {
+            background-color: #48cae4;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 10px rgba(72, 202, 228, 0.3);
+        }
+        
+        .btn-danger {
+            background-color: #e63946;
+            border: none;
+            box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .form-container {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-container h3 {
+            color: #5a189a;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-label {
+            color: #5a189a;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #9d4edd;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(123, 44, 191, 0.6);
+            background: linear-gradient(45deg, #7b2cbf, #9d4edd);
+        }
+        
+        .chat-history-modal .modal-content {
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .chat-history-modal .modal-header {
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            color: white;
+            border-bottom: none;
+        }
+        
+        .chat-history-modal .modal-body {
+            padding: 25px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .chat-message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .chat-message .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .chat-message.user .message-content {
+            background: #007bff;
+            color: white;
+            border-top-right-radius: 2px;
+        }
+        
+        .chat-message.bot .message-content {
+            background: #e9ecef;
+            color: #212529;
+            border-top-left-radius: 2px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 120px;
+            }
+            
+            .welcome-text span {
+                display: none;
+            }
+            
+            .top-bar {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .btn-action {
+                padding: 6px 10px;
+                font-size: 0.75em;
+            }
+            
+            .table-responsive {
+                border-radius: 10px;
+                overflow: hidden;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>用户管理</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>用户名</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>
-                        <button class="btn btn-warning" onclick="editUser({{ user.id }})">编辑</button>
-                        <button class="btn btn-danger" onclick="deleteUser({{ user.id }})">删除</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <h3>添加用户</h3>
-        <form method="post">
-            <input type="hidden" name="action" value="add">
-            <div class="mb-3">
-                <label for="username" class="form-label">用户名</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">密码</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-primary">添加</button>
-        </form>
+    <div class="top-bar">
+        <div class="welcome-text">
+            <i class="fas fa-robot"></i> 小智欢迎您：<span id="username">{{ current_user.username }}</span>
+            <a href="/logout" class="btn btn-light btn-sm ms-2">
+                <i class="fas fa-sign-out-alt"></i> 退出
+            </a>
+        </div>
+        <a href="/chat" class="btn btn-light">
+            <i class="fas fa-arrow-left"></i> 返回聊天
+        </a>
     </div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-users-cog"></i> 用户管理
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>聊天记录</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}{% if user.is_admin %} <span class="badge bg-primary">管理员</span>{% endif %}</td>
+                                <td>{% if 'chat_count' in user %}{{ user.chat_count }}{% else %}0{% endif %}</td>
+                                <td>
+                                    <button class="btn btn-warning btn-action" onclick="editUser({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </button>
+                                    <button class="btn btn-info btn-action" onclick="viewChats({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-comments"></i> 聊天记录
+                                    </button>
+                                    {% if not user.is_admin %}
+                                    <button class="btn btn-danger btn-action" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user-plus"></i> 添加新用户
+            </div>
+            <div class="card-body">
+                <div class="form-container">
+                    <form method="post" id="addUserForm">
+                        <input type="hidden" name="action" value="add">
+                        <div class="mb-3">
+                            <label for="add-username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="add-username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="add-password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="add-password" name="password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" value="1">
+                            <label class="form-check-label" for="is_admin">管理员权限</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 添加用户
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" id="editUserForm">
+                        <input type="hidden" name="action" value="update">
+                        <input type="hidden" name="user_id" id="edit-user-id">
+                        <div class="mb-3">
+                            <label for="edit-username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="edit-username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-password" class="form-label">密码 (留空则不修改)</label>
+                            <input type="password" class="form-control" id="edit-password" name="password">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="edit-is-admin" name="is_admin" value="1">
+                            <label class="form-check-label" for="edit-is-admin">管理员权限</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEditForm()">保存更改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看聊天记录模态框 -->
+    <div class="modal fade chat-history-modal" id="chatHistoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-comments"></i> <span id="chat-history-username"></span> 的聊天记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="chat-history-content">
+                    <!-- 聊天记录将在这里动态加载 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function deleteUser(userId) {
-            if (confirm('确定删除该用户？')) {
+        // 模态框实例
+        let editModal;
+        let chatHistoryModal;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化模态框
+            editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            chatHistoryModal = new bootstrap.Modal(document.getElementById('chatHistoryModal'));
+        });
+        
+        function editUser(userId, username) {
+            document.getElementById('edit-user-id').value = userId;
+            document.getElementById('edit-username').value = username;
+            document.getElementById('edit-password').value = '';
+            
+            // 获取用户信息来设置正确的管理员状态
+            fetch(`/api/user/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('edit-is-admin').checked = data.is_admin;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 默认为非管理员
+                    document.getElementById('edit-is-admin').checked = false;
+                });
+            
+            editModal.show();
+        }
+        
+        function submitEditForm() {
+            document.getElementById('editUserForm').submit();
+        }
+        
+        function viewChats(userId, username) {
+            document.getElementById('chat-history-username').textContent = username;
+            document.getElementById('chat-history-content').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p>正在加载聊天记录...</p></div>';
+            
+            fetch(`/api/user/${userId}/chats`)
+                .then(response => response.json())
+                .then(data => {
+                    const chatHistoryContent = document.getElementById('chat-history-content');
+                    
+                    if (data.length === 0) {
+                        chatHistoryContent.innerHTML = '<p class="text-center">暂无聊天记录</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.forEach(chat => {
+                        html += `<div class="chat-history-item mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6>${chat.title}</h6>
+                                <small class="text-muted">${chat.created_at}</small>
+                            </div>
+                            <div class="chat-messages p-3 border rounded" style="max-height: 300px; overflow-y: auto;">`;
+                        
+                        if (chat.messages && chat.messages.length > 0) {
+                            chat.messages.forEach(msg => {
+                                const isUser = msg.role === 'user';
+                                html += `<div class="chat-message ${isUser ? 'user' : 'bot'}">
+                                    <img src="/static/${isUser ? 'user' : 'bot'}-avatar.png" alt="${msg.role}" class="avatar">
+                                    <div class="message-content">${msg.content}</div>
+                                </div>`;
+                            });
+                        } else {
+                            html += '<p class="text-center">空对话</p>';
+                        }
+                        
+                        html += `</div>
+                            <div class="d-flex justify-content-end mt-2">
+                                <button class="btn btn-sm btn-danger" onclick="deleteChat(${chat.id}, ${userId})">
+                                    <i class="fas fa-trash"></i> 删除此对话
+                                </button>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    chatHistoryContent.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('chat-history-content').innerHTML = '<p class="text-center text-danger">加载聊天记录失败</p>';
+                });
+            
+            chatHistoryModal.show();
+        }
+        
+        function deleteChat(chatId, userId) {
+            if (confirm('确定要删除这条聊天记录吗？')) {
+                fetch(`/api/chat/${chatId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 重新加载聊天记录
+                        viewChats(userId, document.getElementById('chat-history-username').textContent);
+                    } else {
+                        alert('删除失败: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败，请重试');
+                });
+            }
+        }
+        
+        function deleteUser(userId, username) {
+            if (confirm(`确定要删除用户 "${username}" 吗？此操作将删除该用户的所有聊天记录。`)) {
                 const form = document.createElement('form');
                 form.method = 'post';
-                form.action = '/admin';
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'delete';
-                const idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.name = 'user_id';
-                idInput.value = userId;
-                form.appendChild(actionInput);
-                form.appendChild(idInput);
+                form.innerHTML = `
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="user_id" value="${userId}">
+                `;
                 document.body.appendChild(form);
                 form.submit();
             }
         }
-        // 编辑功能可类似实现
     </script>
 </body>
 </html>
