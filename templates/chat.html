@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -373,12 +376,23 @@
         
         .thinking-body {
             overflow: hidden;
-            transition: max-height 0.3s ease;
-            max-height: 1000px;
+            transition: max-height 0.5s ease;
+            max-height: none;
         }
         
         .thinking-body.collapsed {
             max-height: 0;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .thinking-body:not(.collapsed) {
+            max-height: 100000px;
+        }
+        
+        .thinking-body pre {
+            max-height: none;
+            overflow: visible;
         }
 
         /* Add these styles to your existing CSS */
@@ -433,14 +447,24 @@
         }
 
         .message-content pre {
-            margin-top: 16px;
-            margin-bottom: 16px;
-            padding: 16px;
-            overflow: auto;
-            font-size: 85%;
-            line-height: 1.45;
-            background-color: #f6f8fa;
-            border-radius: 6px;
+            margin: 1em 0;
+            padding: 1em;
+            border-radius: 8px;
+            background: #282c34;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative;
+        }
+
+        .message-content pre code {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 0;
+            background: transparent;
+            white-space: pre;
+            word-spacing: normal;
+            word-break: normal;
+            overflow-x: auto;
         }
 
         .message-content ul,
@@ -535,6 +559,136 @@
         .user-message .message-content table tr:nth-child(2n) {
             background-color: rgba(255, 255, 255, 0.1);
         }
+
+        /* 添加左边栏切换按钮样式 */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            left: 10px;
+            bottom: 20px;
+            z-index: 1001;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            border: none;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            .history-sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                bottom: 0;
+                width: 80%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                background: rgba(248, 249, 250, 0.95);
+            }
+            
+            .history-sidebar.show {
+                left: 0;
+            }
+            
+            .chat-container {
+                height: calc(100vh - 140px);
+            }
+        }
+
+        /* 添加代码语言标签 */
+        .message-content pre::before {
+            content: attr(data-language);
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            background: rgba(255,255,255,0.1);
+            border-radius: 0 8px 0 8px;
+            color: #abb2bf;
+        }
+
+        /* 用户消息中的代码块样式调整 */
+        .user-message .message-content pre {
+            background: rgba(40, 44, 52, 0.8);
+        }
+
+        /* 添加复制按钮样式 */
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: #abb2bf;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s;
+        }
+
+        /* 代码块的复制按钮位置调整 */
+        .message-content pre .copy-btn {
+            top: 4px;
+            right: 80px; /* 为语言标签留出空间 */
+        }
+
+        /* 思考内容的复制按钮位置调整 */
+        .thinking-content .copy-btn {
+            top: 4px;
+            right: 4px;
+        }
+
+        /* 消息块的复制按钮位置调整 */
+        .message-content .copy-btn.copy-all {
+            top: 4px;
+            right: 4px;
+        }
+
+        /* 鼠标悬停时显示复制按钮 */
+        .message-content:hover .copy-btn,
+        .thinking-content:hover .copy-btn,
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 复制成功的样式 */
+        .copy-btn.success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        /* 调整消息内容的定位 */
+        .message-content {
+            position: relative;
+        }
+
+        /* 调整代码块的定位 */
+        .message-content pre {
+            position: relative;
+        }
+
+        /* 调整思考内容的定位 */
+        .thinking-content {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -582,6 +736,11 @@
         </div>
     </div>
 
+    <!-- 添加左边栏切换按钮 -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <!-- 编辑聊天标题模态框 -->
     <div class="modal fade" id="editTitleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -623,6 +782,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script>
         let currentChatId = null;
 
@@ -740,39 +900,26 @@
                 });
         }
 
-        // Update the loadChat function with the new formatting
+        // 修改 loadChat 函数，确保历史记录也有折叠功能
         function loadChat(chatId) {
             currentChatId = chatId;
             
-            // Show loading indicator
             document.getElementById('chat-window').innerHTML = '';
             document.getElementById('loading-indicator').style.display = 'block';
             
             fetch(`/chat/history/${chatId}`)
                 .then(response => response.json())
                 .then(messages => {
-                    // Hide loading indicator
                     document.getElementById('loading-indicator').style.display = 'none';
                     
                     const chatWindow = document.getElementById('chat-window');
                     chatWindow.innerHTML = '';
                     messages.forEach(msg => {
-                        const messageDiv = document.createElement('div');
-                        messageDiv.className = `message ${msg.role}-message`;
-                        
-                        // Use the new formatting function
-                        const formattedContent = formatMessageContent(msg.content);
-                        
-                        messageDiv.innerHTML = `
-                            <img src="/static/${msg.role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" 
-                                 alt="${msg.role}" class="avatar">
-                            <div class="message-content">${formattedContent}</div>
-                        `;
-                        chatWindow.appendChild(messageDiv);
+                        addMessageToChat(msg.role, msg.content);
                     });
                     
-                    // Scroll to bottom
                     chatWindow.scrollTop = chatWindow.scrollHeight;
+                    applyHighlighting();
                 });
         }
 
@@ -897,6 +1044,7 @@
                 
                 // Refresh history list
                 loadHistory();
+                applyHighlighting();
             })
             .catch(error => {
                 // Remove loading message
@@ -927,44 +1075,176 @@
             }
         });
 
-        // 添加折叠功能的切换函数
+        // 修改折叠切换函数，确保内容完整展示
         function toggleThinking(header) {
             header.classList.toggle('collapsed');
             const body = header.nextElementSibling;
             body.classList.toggle('collapsed');
+            
+            // 确保展开时滚动到可见区域
+            if (!header.classList.contains('collapsed')) {
+                setTimeout(() => {
+                    body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
         }
 
         function formatMessageContent(content) {
-            // Create a DOMParser to safely parse HTML
             const parser = new DOMParser();
             
-            // First, we need to protect code blocks from being processed by marked
-            let codeBlocks = [];
-            let processedContent = content.replace(/```([a-z]*)([\s\S]*?)```/g, (match, language, code) => {
-                const id = codeBlocks.length;
-                codeBlocks.push({language, code: code.trim()});
-                return `__CODE_BLOCK_${id}__`;
+            // 处理代码块
+            let processedContent = content.replace(/```([a-z]*)\n([\s\S]*?)```/g, (match, language, code) => {
+                const highlightedCode = hljs.highlightAuto(code.trim(), language ? [language] : undefined).value;
+                // 转义代码中的特殊字符，以便安全地放入 data-clipboard-text 属性
+                const escapedCode = code.trim()
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                    
+                return `\n<pre data-language="${language || 'plaintext'}">
+                    <button class="copy-btn" data-clipboard-text="${escapedCode}">
+                        <i class="far fa-copy"></i> 复制
+                    </button>
+                    <code class="hljs language-${language || 'plaintext'}">${highlightedCode}</code>
+                </pre>\n`;
             });
             
-            // Process the markdown content using marked.js
+            // 处理行内代码
+            processedContent = processedContent.replace(/`([^`]+)`/g, (match, code) => {
+                return `<code class="inline-code">${code}</code>`;
+            });
+            
             let formattedContent = marked.parse(processedContent);
-            
-            // Restore code blocks with proper formatting
-            formattedContent = formattedContent.replace(/__CODE_BLOCK_(\d+)__/g, (match, id) => {
-                const block = codeBlocks[parseInt(id)];
-                return `<div class="code-block">${block.code}</div>`;
-            });
-            
-            // Parse the HTML to safely handle any potential XSS issues
             const doc = parser.parseFromString(formattedContent, 'text/html');
             
             return doc.body.innerHTML;
         }
 
+        // 在每次添加新消息后应用语法高亮
+        function applyHighlighting() {
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+
         // 页面加载时获取历史记录
         document.addEventListener('DOMContentLoaded', function() {
             loadHistory();
+            initializeClipboard();
         });
+
+        // 添加侧边栏切换功能
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.history-sidebar');
+            sidebar.classList.toggle('show');
+            
+            // 在移动端点击聊天历史后自动隐藏侧边栏
+            if (window.innerWidth <= 768) {
+                const historyItems = document.querySelectorAll('.history-item');
+                historyItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        sidebar.classList.remove('show');
+                    });
+                });
+            }
+        }
+
+        // 初始化剪贴板功能
+        function initializeClipboard() {
+            // 清除之前的事件监听器
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                const clipboard = btn._clipboard;
+                if (clipboard) {
+                    clipboard.destroy();
+                }
+            });
+
+            // 初始化新的复制按钮
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                const clipboard = new ClipboardJS(btn);
+                btn._clipboard = clipboard;
+
+                clipboard.on('success', (e) => {
+                    const btn = e.trigger;
+                    btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                    btn.classList.add('success');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="far fa-copy"></i> 复制';
+                        btn.classList.remove('success');
+                    }, 2000);
+                    
+                    e.clearSelection();
+                });
+            });
+        }
+
+        // 修改添加消息的函数
+        function addMessageToChat(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            
+            // 转义整个消息内容
+            const escapedContent = content
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            let messageHTML = `
+                <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
+                <div class="message-content">
+                    <button class="copy-btn copy-all" data-clipboard-text="${escapedContent}">
+                        <i class="far fa-copy"></i> 复制全部
+                    </button>
+            `;
+            
+            // 处理思考过程
+            const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+            if (thinkMatch && role === 'assistant') {
+                const thinkContent = thinkMatch[1].trim();
+                const escapedThinkContent = thinkContent
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                const finalResponse = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+                
+                messageHTML += `
+                    <div class="thinking-content">
+                        <button class="copy-btn" data-clipboard-text="${escapedThinkContent}">
+                            <i class="far fa-copy"></i> 复制
+                        </button>
+                        <div class="thinking-header" onclick="toggleThinking(this)">
+                            <i class="fas fa-caret-down"></i>
+                            <span>查看推理过程</span>
+                        </div>
+                        <div class="thinking-body">
+                            ${formatMessageContent(thinkContent)}
+                        </div>
+                    </div>
+                    ${formatMessageContent(finalResponse)}
+                `;
+            } else {
+                messageHTML += formatMessageContent(content);
+            }
+            
+            messageHTML += '</div>';
+            messageDiv.innerHTML = messageHTML;
+            
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            
+            // 初始化新添加消息的复制功能
+            initializeClipboard();
+            // 应用代码高亮
+            applyHighlighting();
+        }
     </script>
 </body>
 </html>
