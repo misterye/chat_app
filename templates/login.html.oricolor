@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0c4a6e 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -60,11 +60,10 @@
             text-align: center;
             margin-bottom: 35px;
             position: relative;
-            color: #0c4a6e;
         }
         
         .login-header h2 {
-            color: #0c4a6e;
+            color: #5a189a;
             font-weight: 700;
             margin-bottom: 15px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -73,10 +72,10 @@
         
         .login-header .app-icon {
             font-size: 70px;
-            color: #0369a1;
+            color: #7b2cbf;
             margin-bottom: 25px;
             animation: float 3s ease-in-out infinite;
-            text-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
+            text-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
             display: inline-block;
         }
         
@@ -103,13 +102,13 @@
         }
         
         .form-control:focus {
-            border-color: #0ea5e9;
-            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+            border-color: #9d4edd;
+            box-shadow: 0 0 15px rgba(123, 44, 191, 0.3);
             transform: translateY(-2px);
         }
         
         .form-label {
-            color: #0c4a6e;
+            color: #5a189a;
             font-weight: 600;
             margin-left: 10px;
             font-size: 1.1rem;
@@ -120,7 +119,7 @@
         }
         
         .form-label i {
-            color: #0ea5e9;
+            color: #9d4edd;
         }
         
         .input-group {
@@ -136,7 +135,7 @@
         
         .input-group-text {
             border-radius: 50px 0 0 50px;
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
             color: white;
             border: none;
             padding-left: 20px;
@@ -145,13 +144,13 @@
         }
         
         .btn-primary {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
             border: none;
             border-radius: 50px;
             padding: 15px 30px;
             font-weight: 600;
             letter-spacing: 1px;
-            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+            box-shadow: 0 8px 20px rgba(123, 44, 191, 0.4);
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
@@ -175,8 +174,8 @@
         
         .btn-primary:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(14, 165, 233, 0.6);
-            background: linear-gradient(45deg, #0369a1, #0ea5e9);
+            box-shadow: 0 12px 25px rgba(123, 44, 191, 0.6);
+            background: linear-gradient(45deg, #7b2cbf, #9d4edd);
         }
         
         .welcome-text {

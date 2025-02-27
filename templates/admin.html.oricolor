@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0c4a6e 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 0;
             margin: 0;
@@ -42,7 +42,7 @@
         
         .welcome-text i {
             font-size: 1.5em;
-            color: #0ea5e9;
+            color: #9d4edd;
         }
         
         .container {
@@ -67,7 +67,7 @@
         }
         
         .card-header {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
             color: white;
             padding: 20px;
             font-weight: 600;
@@ -89,7 +89,7 @@
         }
         
         .table thead {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
             color: white;
         }
         
@@ -129,10 +129,10 @@
         }
         
         .btn-info {
-            background-color: #0ea5e9;
+            background-color: #48cae4;
             border: none;
             color: white;
-            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+            box-shadow: 0 4px 10px rgba(72, 202, 228, 0.3);
         }
         
         .btn-danger {
@@ -154,7 +154,7 @@
         }
         
         .form-container h3 {
-            color: #0c4a6e;
+            color: #5a189a;
             font-weight: 600;
             margin-bottom: 20px;
             display: flex;
@@ -163,7 +163,7 @@
         }
         
         .form-label {
-            color: #0c4a6e;
+            color: #5a189a;
             font-weight: 600;
             margin-bottom: 8px;
         }
@@ -176,12 +176,12 @@
         }
         
         .form-control:focus {
-            border-color: #0ea5e9;
-            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+            border-color: #9d4edd;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
         }
         
         .btn-primary {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
             border: none;
             border-radius: 10px;
             padding: 12px 25px;
@@ -203,7 +203,7 @@
         }
         
         .chat-history-modal .modal-header {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
+            background: linear-gradient(45deg, #5a189a, #7b2cbf);
             color: white;
             border-bottom: none;
         }
