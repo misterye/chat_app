@@ -20,13 +20,15 @@
         }
         
         .login-container {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
             padding: 40px;
             width: 100%;
             max-width: 450px;
-            backdrop-filter: blur(10px);
             transform: translateY(0);
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
@@ -93,11 +95,13 @@
         }
         
         .form-control {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50px;
             padding: 15px 20px;
-            border: 2px solid #e0e0fe;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.8);
             font-size: 1.1rem;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
         }
@@ -124,7 +128,9 @@
         }
         
         .input-group {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 50px;
             transition: all 0.3s ease;
         }
@@ -135,8 +141,11 @@
         }
         
         .input-group-text {
+            background: rgba(12, 74, 110, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 50px 0 0 50px;
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             color: white;
             border: none;
             padding-left: 20px;
@@ -344,6 +353,14 @@
             0%, 100% { transform: translateX(0); }
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
             20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        /* 更新错误提示模态框样式 */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
