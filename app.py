@@ -12,7 +12,7 @@ from openai import OpenAI
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'e3bcf3078592b37dab1a1ad1264707e1fd7030d655528cd7a1ad202edaf1a5db'  # 请替换为安全的密钥
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')  # 从环境变量获取
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -241,6 +241,11 @@ def send_message(message, history_id):
         # 添加新消息
         messages.append({"role": "user", "content": message})
 
+        # 添加打印用户输入消息
+        print("\n=== 用户输入 ===")
+        print(f"用户消息: {message}")
+        print(f"历史记录ID: {history_id}")
+        
         # 使用 Groq API 发送请求
         response = client.chat.completions.create(
             model="deepseek-r1-distill-llama-70b",  # 或其他支持的模型
@@ -251,6 +256,11 @@ def send_message(message, history_id):
 
         # 获取回复内容
         assistant_message = response.choices[0].message.content
+        
+        # 添加打印系统回复
+        print("\n=== 系统回复 ===")
+        print(f"系统回复: {assistant_message}")
+        print("================\n")
 
         # 保存对话到数据库
         conn = get_db_connection()
@@ -378,4 +388,4 @@ def get_user_info(user_id):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

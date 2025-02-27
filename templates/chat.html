@@ -343,6 +343,42 @@
                 height: calc(80vh - 80px);
             }
         }
+        
+        .thinking-content {
+            font-style: italic;
+            background: rgba(90, 24, 154, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 3px solid #5a189a;
+        }
+        
+        .thinking-header {
+            cursor: pointer;
+            color: #5a189a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .thinking-header i {
+            transition: transform 0.3s ease;
+        }
+        
+        .thinking-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+        
+        .thinking-body {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            max-height: 1000px;
+        }
+        
+        .thinking-body.collapsed {
+            max-height: 0;
+        }
     </style>
 </head>
 <body>
@@ -662,20 +698,53 @@
                 // 移除加载消息
                 chatWindow.removeChild(loadingIndicator);
                 
-                // 格式化助手的回复，处理代码块和换行
-                let formattedResponse = data.response
+                // 解析响应中的思考过程和最终答案
+                let response = data.response;
+                let thinkContent = '';
+                let finalResponse = response;
+                
+                // 提取<think>标签中的内容
+                const thinkMatch = response.match(/<think>([\s\S]*?)<\/think>/);
+                if (thinkMatch) {
+                    thinkContent = thinkMatch[1].trim();
+                    finalResponse = response.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+                }
+                
+                // 格式化最终响应，处理代码块和换行
+                let formattedResponse = finalResponse
                     .replace(/```([a-z]*)([\s\S]*?)```/g, (match, language, code) => {
                         return `<div class="code-block">${code.trim()}</div>`;
                     })
-                    .replace(/\n/g, '<br>'); // 保留换行符
+                    .replace(/\n/g, '<br>');
+                
+                // 创建消息HTML
+                let messageHTML = `
+                    <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                    <div class="message-content">
+                `;
+                
+                // 如果有思考内容，添加可折叠的思考部分
+                if (thinkContent) {
+                    messageHTML += `
+                        <div class="thinking-content">
+                            <div class="thinking-header" onclick="toggleThinking(this)">
+                                <i class="fas fa-caret-down"></i>
+                                <span>查看推理过程</span>
+                            </div>
+                            <div class="thinking-body">
+                                ${thinkContent.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 添加最终响应
+                messageHTML += formattedResponse + '</div>';
                 
                 // 添加助手的回复
                 const botMessageDiv = document.createElement('div');
                 botMessageDiv.className = 'message assistant-message';
-                botMessageDiv.innerHTML = `
-                    <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
-                    <div class="message-content">${formattedResponse}</div>
-                `;
+                botMessageDiv.innerHTML = messageHTML;
                 chatWindow.appendChild(botMessageDiv);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
                 
@@ -710,6 +779,13 @@
                 sendMessage();
             }
         });
+
+        // 添加折叠功能的切换函数
+        function toggleThinking(header) {
+            header.classList.toggle('collapsed');
+            const body = header.nextElementSibling;
+            body.classList.toggle('collapsed');
+        }
 
         // 页面加载时获取历史记录
         document.addEventListener('DOMContentLoaded', function() {
