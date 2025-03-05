@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>聊天 - 小智</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
@@ -13,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #0c4a6e 100%);
             min-height: 100vh;
             padding: 0;
             margin: 0;
@@ -22,7 +23,9 @@
         
         .top-bar {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
@@ -47,7 +50,7 @@
         
         .welcome-text i {
             font-size: 1.5em;
-            color: #9d4edd;
+            color: #0ea5e9;
         }
         
         .container-fluid {
@@ -55,30 +58,38 @@
         }
         
         .chat-container {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
             overflow: hidden;
             height: 85vh;
             transition: all 0.3s;
         }
         
         .history-sidebar {
-            background: rgba(248, 249, 250, 0.9);
-            border-right: 1px solid #dee2e6;
+            background: rgba(248, 249, 250, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
             padding: 15px;
             height: 100%;
             overflow-y: auto;
         }
         
         .history-sidebar h5 {
-            color: #5a189a;
+            color: #0c4a6e;
             font-weight: 600;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        .history-sidebar h5 i {
+            color: #0ea5e9;
         }
         
         #chat-window {
@@ -118,10 +129,17 @@
             white-space: pre-wrap;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             line-height: 1.3;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .user-message .message-content {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: rgba(12, 74, 110, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
             border-top-right-radius: 2px;
         }
@@ -143,20 +161,20 @@
         .new-chat-btn {
             width: 100%;
             margin-bottom: 15px;
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             border: none;
             border-radius: 10px;
             padding: 12px 15px;
             font-weight: 600;
             letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
             transition: all 0.3s;
         }
         
         .new-chat-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(123, 44, 191, 0.6);
-            background: linear-gradient(45deg, #7b2cbf, #9d4edd);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.6);
+            background: linear-gradient(45deg, #0369a1, #0ea5e9);
         }
         
         .history-item {
@@ -168,18 +186,22 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .history-item:hover {
-            background: rgba(229, 230, 235, 0.7);
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid rgba(14, 165, 233, 0.2);
             transform: translateY(-2px);
         }
         
         .history-item.active {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             color: white;
-            box-shadow: 0 4px 10px rgba(123, 44, 191, 0.4);
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
         }
         
         .history-item.active .history-actions i {
@@ -211,9 +233,11 @@
         }
         
         .input-group {
-            background: white;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             padding: 15px;
-            border-top: 1px solid #dee2e6;
             border-radius: 0 0 20px 20px;
             gap: 10px;
             flex-wrap: nowrap;
@@ -235,32 +259,32 @@
         }
         
         #message-input:focus {
-            border-color: #9d4edd;
-            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
         }
         
         .btn-send {
             border-radius: 20px;
             margin-left: 10px;
             padding: 10px 25px;
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             border: none;
             font-weight: 600;
-            box-shadow: 0 4px 10px rgba(123, 44, 191, 0.4);
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
             transition: all 0.3s;
         }
         
         .btn-send:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(123, 44, 191, 0.6);
-            background: linear-gradient(45deg, #7b2cbf, #9d4edd);
+            box-shadow: 0 6px 15px rgba(14, 165, 233, 0.6);
+            background: linear-gradient(45deg, #0369a1, #0ea5e9);
         }
         
         .loading-indicator {
             display: none;
             text-align: center;
             margin: 20px 0;
-            color: #5a189a;
+            color: #0c4a6e;
         }
         
         .loading-indicator i {
@@ -269,7 +293,7 @@
         
         .loading-message .message-content {
             background: rgba(248, 249, 250, 0.8);
-            color: #5a189a;
+            color: #0c4a6e;
         }
         
         @keyframes spin {
@@ -300,12 +324,16 @@
         
         /* 模态框样式 */
         .modal-content {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             overflow: hidden;
         }
         
         .modal-header {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             color: white;
             border-bottom: none;
         }
@@ -462,50 +490,64 @@
         }
         
         .thinking-content {
-            font-style: italic;
-            background: rgba(90, 24, 154, 0.05);
-            padding: 10px;
-            border-radius: 8px;
+            background: rgba(14, 165, 233, 0.05);
+            border-radius: 10px;
             margin: 10px 0;
-            border-left: 3px solid #5a189a;
+            padding: 10px;
+            border-left: 3px solid #0ea5e9;
         }
         
         .thinking-header {
+            color: #0c4a6e;
             cursor: pointer;
-            color: #5a189a;
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 5px;
+            padding: 5px;
+            transition: all 0.3s;
         }
         
         .thinking-header i {
-            transition: transform 0.3s ease;
+            color: #0ea5e9;
+            transition: transform 0.3s;
         }
         
         .thinking-header.collapsed i {
             transform: rotate(-90deg);
         }
         
-        .thinking-body {
-            overflow: hidden;
-            transition: max-height 0.5s ease;
-            max-height: none;
+        .thinking-header:hover {
+            color: #0369a1;
         }
         
+        .thinking-header:hover i {
+            color: #0369a1;
+        }
+        
+        .thinking-body {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(14, 165, 233, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
         .thinking-body.collapsed {
             max-height: 0;
             padding: 0;
             margin: 0;
+            opacity: 0;
         }
-        
-        .thinking-body:not(.collapsed) {
-            max-height: 100000px;
+
+        .thinking-header i {
+            color: #0ea5e9;
+            transition: transform 0.3s ease;
         }
-        
-        .thinking-body pre {
-            max-height: none;
-            overflow: visible;
+
+        .thinking-header.collapsed i {
+            transform: rotate(-90deg);
         }
 
         /* Add these styles to your existing CSS */
@@ -747,18 +789,25 @@
 
         /* 添加左边栏切换按钮样式 */
         .sidebar-toggle {
-            display: none;
             position: fixed;
-            left: 10px;
             bottom: 20px;
-            z-index: 1001;
-            width: 45px;
-            height: 45px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             border: none;
             color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
+            z-index: 1000;
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(45deg, #0369a1, #0ea5e9);
+            box-shadow: 0 6px 15px rgba(14, 165, 233, 0.6);
         }
 
         /* 响应式调整 */

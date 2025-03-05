@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理员后台 - 小智</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #0c4a6e 100%);
             min-height: 100vh;
             padding: 0;
             margin: 0;
@@ -17,7 +18,9 @@
         
         .top-bar {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
@@ -42,7 +45,7 @@
         
         .welcome-text i {
             font-size: 1.5em;
-            color: #9d4edd;
+            color: #0ea5e9;
         }
         
         .container {
@@ -52,10 +55,12 @@
         }
         
         .card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
             overflow: hidden;
             transition: all 0.3s;
             margin-bottom: 30px;
@@ -67,7 +72,7 @@
         }
         
         .card-header {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             color: white;
             padding: 20px;
             font-weight: 600;
@@ -83,13 +88,16 @@
         }
         
         .table {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
         }
         
         .table thead {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             color: white;
         }
         
@@ -129,10 +137,10 @@
         }
         
         .btn-info {
-            background-color: #48cae4;
+            background-color: #0ea5e9;
             border: none;
             color: white;
-            box-shadow: 0 4px 10px rgba(72, 202, 228, 0.3);
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
         }
         
         .btn-danger {
@@ -147,14 +155,17 @@
         }
         
         .form-container {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
         
         .form-container h3 {
-            color: #5a189a;
+            color: #0c4a6e;
             font-weight: 600;
             margin-bottom: 20px;
             display: flex;
@@ -163,7 +174,7 @@
         }
         
         .form-label {
-            color: #5a189a;
+            color: #0c4a6e;
             font-weight: 600;
             margin-bottom: 8px;
         }
@@ -176,12 +187,12 @@
         }
         
         .form-control:focus {
-            border-color: #9d4edd;
-            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
         }
         
         .btn-primary {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             border: none;
             border-radius: 10px;
             padding: 12px 25px;
@@ -198,12 +209,16 @@
         }
         
         .chat-history-modal .modal-content {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             overflow: hidden;
         }
         
         .chat-history-modal .modal-header {
-            background: linear-gradient(45deg, #5a189a, #7b2cbf);
+            background: linear-gradient(45deg, #0c4a6e, #0369a1);
             color: white;
             border-bottom: none;
         }

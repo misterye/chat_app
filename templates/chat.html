@@ -5,981 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>聊天 - 小智</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0c4a6e 100%);
+            background-color: #f8f9fa;
             min-height: 100vh;
-            padding: 0;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
-        .top-bar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
-        
-        .welcome-text {
-            color: white;
-            font-size: 1.2em;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        
-        .welcome-text i {
-            font-size: 1.5em;
-            color: #0ea5e9;
-        }
-        
-        .container-fluid {
-            padding: 90px 20px 20px;
-        }
-        
         .chat-container {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
             height: 85vh;
-            transition: all 0.3s;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            overflow: hidden;
         }
-        
         .history-sidebar {
-            background: rgba(248, 249, 250, 0.5);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 15px;
+            border-right: 1px solid #dee2e6;
             height: 100%;
             overflow-y: auto;
         }
-        
-        .history-sidebar h5 {
-            color: #0c4a6e;
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .history-sidebar h5 i {
-            color: #0ea5e9;
-        }
-        
         #chat-window {
-            height: calc(85vh - 80px);
+            height: calc(85vh - 70px);
             overflow-y: auto;
-            padding: 20px;
-            background: transparent;
-            scrollbar-width: thin;
+            padding: 1rem;
         }
-        
-        #chat-window::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        #chat-window::-webkit-scrollbar-thumb {
-            background-color: rgba(123, 44, 191, 0.4);
-            border-radius: 3px;
-        }
-        
         .message {
-            margin-bottom: 20px;
+            margin-bottom: 1rem;
             display: flex;
             align-items: flex-start;
-            gap: 10px;
+            gap: 0.5rem;
         }
-        
         .user-message {
             flex-direction: row-reverse;
         }
-        
         .message-content {
             max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 15px;
-            position: relative;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            line-height: 1.3;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
         }
-        
         .user-message .message-content {
-            background: rgba(12, 74, 110, 0.8);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #0d6efd;
             color: white;
-            border-top-right-radius: 2px;
         }
-        
-        .assistant-message .message-content {
-            background: white;
-            color: #212529;
-            border-top-left-radius: 2px;
-        }
-        
         .avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            object-fit: cover;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
-        
-        .new-chat-btn {
-            width: 100%;
-            margin-bottom: 15px;
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
-            border: none;
-            border-radius: 10px;
-            padding: 12px 15px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
-            transition: all 0.3s;
-        }
-        
-        .new-chat-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.6);
-            background: linear-gradient(45deg, #0369a1, #0ea5e9);
-        }
-        
         .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 8px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
             cursor: pointer;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
         .history-item:hover {
-            background: rgba(14, 165, 233, 0.15);
-            border: 1px solid rgba(14, 165, 233, 0.2);
-            transform: translateY(-2px);
+            background-color: #e9ecef;
         }
-        
         .history-item.active {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
-            color: white;
-            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
-        }
-        
-        .history-item.active .history-actions i {
+            background-color: #0d6efd;
             color: white;
         }
-        
-        .history-title {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 500;
-        }
-        
-        .history-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .history-actions i {
-            cursor: pointer;
-            font-size: 0.9em;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-        
-        .history-actions i:hover {
-            opacity: 1;
-        }
-        
         .input-group {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 0 0 20px 20px;
-            gap: 10px;
-            flex-wrap: nowrap;
+            padding: 0.5rem;
         }
-        
-        .input-group > .form-control {
-            border-radius: 20px !important;
-        }
-        
-        .input-group > .btn {
-            border-radius: 20px !important;
-        }
-        
-        #message-input {
-            border-radius: 20px;
-            padding: 12px 20px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s;
-        }
-        
-        #message-input:focus {
-            border-color: #0ea5e9;
-            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
-        }
-        
-        .btn-send {
-            border-radius: 20px;
-            margin-left: 10px;
-            padding: 10px 25px;
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
-            border: none;
-            font-weight: 600;
-            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
-            transition: all 0.3s;
-        }
-        
-        .btn-send:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(14, 165, 233, 0.6);
-            background: linear-gradient(45deg, #0369a1, #0ea5e9);
-        }
-        
-        .loading-indicator {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-            color: #0c4a6e;
-        }
-        
-        .loading-indicator i {
-            animation: spin 1s linear infinite;
-        }
-        
-        .loading-message .message-content {
-            background: rgba(248, 249, 250, 0.8);
-            color: #0c4a6e;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .code-block {
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            padding: 10px;
-            font-family: monospace;
-            white-space: pre;
-            overflow-x: auto;
-            margin: 10px 0;
-            border-left: 3px solid #5a189a;
-        }
-        
-        .assistant-message .code-block {
-            background-color: #2d2d2d;
-            color: #f8f8f2;
-        }
-        
-        .user-message .code-block {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-left: 3px solid #fff;
-        }
-        
-        /* 模态框样式 */
-        .modal-content {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
-            color: white;
-            border-bottom: none;
-        }
-        
-        .modal-body {
-            padding: 25px;
-        }
-        
-        .form-control {
-            border-radius: 10px;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s;
-        }
-        
-        .form-control:focus {
-            border-color: #9d4edd;
-            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
-        }
-        
-        /* 响应式调整 */
         @media (max-width: 768px) {
-            /* 优化顶部栏 */
-            .top-bar {
-                padding: 8px 15px;
-                height: 50px; /* 固定高度 */
-            }
-            
-            .welcome-text {
-                font-size: 1em;
-            }
-            
-            .welcome-text span {
-                display: none; /* 隐藏欢迎文字 */
-            }
-            
-            /* 调整顶部按钮 */
-            .top-bar .btn {
-                padding: 4px 8px;
-                font-size: 0.9em;
-                margin-left: 8px;
-            }
-            
-            /* 主容器调整 */
-            .container-fluid {
-                padding: 60px 5px 5px; /* 减小所有内边距 */
-            }
-            
-            .chat-container {
-                height: calc(100vh - 65px); /* 调整高度以适应新的顶部栏 */
-                margin: 0;
-                border-radius: 12px 12px 0 0; /* 只保留顶部圆角 */
-            }
-            
-            /* 聊天窗口调整 */
-            #chat-window {
-                height: calc(100vh - 125px); /* 调整以留出足够的输入框空间 */
-                padding: 10px;
-            }
-            
-            /* 消息内容宽度调整 */
-            .message-content {
-                max-width: 90%; /* 增加消息气泡宽度 */
-                padding: 10px 12px;
-            }
-            
-            /* 输入区域优化 */
-            .input-group {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 8px;
-                background: white;
-                border-top: 1px solid #dee2e6;
-                margin: 0;
-                z-index: 1000;
-                border-radius: 0;
-            }
-            
-            #message-input {
-                height: 40px;
-                padding: 8px 12px;
-                font-size: 14px;
-            }
-            
-            .btn-send {
-                min-width: 60px;
-                height: 40px;
-                padding: 8px;
-                font-size: 14px;
-            }
-            
-            /* 调整消息间距 */
-            .message {
-                margin-bottom: 12px;
-                gap: 8px;
-            }
-            
-            /* 优化代码块显示 */
-            .message-content pre {
-                margin: 8px -8px;
-                padding: 12px;
-                font-size: 13px;
-                width: calc(100% + 16px); /* 让代码块略微超出消息气泡 */
-            }
-            
-            /* 调整头像大小 */
-            .avatar {
-                width: 30px;
-                height: 30px;
-            }
-            
-            /* 优化侧边栏 */
-            .history-sidebar {
-                padding-top: 60px; /* 适应新的顶部栏高度 */
-                padding-bottom: 60px; /* 为底部输入框留出空间 */
-            }
-        }
-        
-        /* 超小屏幕额外优化 */
-        @media (max-width: 375px) {
-            .top-bar {
-                padding: 8px 10px;
-            }
-            
-            .top-bar .btn {
-                padding: 4px 6px;
-                font-size: 0.85em;
-            }
-            
-            .message-content {
-                max-width: 92%;
-                font-size: 14px;
-                padding: 8px 10px;
-            }
-            
-            .btn-send {
-                min-width: 50px;
-                font-size: 13px;
-            }
-            
-            .avatar {
-                width: 28px;
-                height: 28px;
-            }
-        }
-        
-        /* 确保底部输入框不被键盘遮挡 */
-        @supports (-webkit-touch-callout: none) {
-            .input-group {
-                padding-bottom: calc(8px + env(safe-area-inset-bottom));
-            }
-        }
-        
-        .thinking-content {
-            background: rgba(14, 165, 233, 0.05);
-            border-radius: 10px;
-            margin: 10px 0;
-            padding: 10px;
-            border-left: 3px solid #0ea5e9;
-        }
-        
-        .thinking-header {
-            color: #0c4a6e;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px;
-            transition: all 0.3s;
-        }
-        
-        .thinking-header i {
-            color: #0ea5e9;
-            transition: transform 0.3s;
-        }
-        
-        .thinking-header.collapsed i {
-            transform: rotate(-90deg);
-        }
-        
-        .thinking-header:hover {
-            color: #0369a1;
-        }
-        
-        .thinking-header:hover i {
-            color: #0369a1;
-        }
-        
-        .thinking-body {
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(14, 165, 233, 0.05);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .thinking-body.collapsed {
-            max-height: 0;
-            padding: 0;
-            margin: 0;
-            opacity: 0;
-        }
-
-        .thinking-header i {
-            color: #0ea5e9;
-            transition: transform 0.3s ease;
-        }
-
-        .thinking-header.collapsed i {
-            transform: rotate(-90deg);
-        }
-
-        /* Add these styles to your existing CSS */
-
-        /* Styles for markdown-rendered content */
-        .message-content h1,
-        .message-content h2,
-        .message-content h3,
-        .message-content h4,
-        .message-content h5,
-        .message-content h6 {
-            margin: 8px 0 4px 0;  /* 减小标题间距 */
-            line-height: 1.2;
-        }
-
-        .message-content p {
-            margin: 4px 0;       /* 减小段落间距 */
-            line-height: 1.3;    /* 统一行高 */
-        }
-
-        .message-content ul,
-        .message-content ol {
-            margin: 4px 0;        /* 减小列表外边距 */
-            padding-left: 1.2em;  /* 减小缩进 */
-        }
-
-        .message-content li {
-            margin: 0;           /* 移除列表项间距 */
-            line-height: 1.3;    /* 统一行高 */
-            padding: 1px 0;      /* 添加最小内边距 */
-        }
-
-        .message-content blockquote {
-            margin: 4px 0;
-            padding-left: 0.8em;
-            line-height: 1.3;
-        }
-
-        .message-content pre {
-            margin: 4px 0;
-        }
-
-        .message-content table {
-            margin: 8px 0;        /* 减小表格边距 */
-        }
-
-        .message-content table th,
-        .message-content table td {
-            padding: 4px 8px;     /* 减小表格单元格内边距 */
-            line-height: 1.4;     /* 减小表格行高 */
-        }
-
-        .message-content hr {
-            margin: 8px 0;
-        }
-
-        /* 移动设备上的额外优化 */
-        @media (max-width: 768px) {
-            .message-content {
-                line-height: 1.2;
-            }
-
-            .message-content p,
-            .message-content li,
-            .message-content blockquote {
-                line-height: 1.2;
-            }
-
-            .message-content ul,
-            .message-content ol {
-                padding-left: 1em;
-            }
-        }
-
-        /* Add these styles to your existing CSS */
-
-        /* Styles for markdown-rendered content */
-        .message-content h1,
-        .message-content h2,
-        .message-content h3,
-        .message-content h4,
-        .message-content h5,
-        .message-content h6 {
-            margin-top: 16px;
-            margin-bottom: 10px;
-            font-weight: 600;
-            line-height: 1.25;
-        }
-
-        .message-content h1 {
-            font-size: 2em;
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 0.3em;
-        }
-
-        .message-content h2 {
-            font-size: 1.5em;
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 0.3em;
-        }
-
-        .message-content h3 {
-            font-size: 1.25em;
-        }
-
-        .message-content h4 {
-            font-size: 1em;
-        }
-
-        .message-content h5 {
-            font-size: 0.875em;
-        }
-
-        .message-content h6 {
-            font-size: 0.85em;
-            color: #6c757d;
-        }
-
-        .message-content blockquote {
-            margin: 0;
-            padding-left: 1em;
-            color: #6c757d;
-            border-left: 0.25em solid #dfe2e5;
-        }
-
-        .message-content pre {
-            margin: 1em 0;
-            padding: 1em;
-            border-radius: 8px;
-            background: #282c34;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            position: relative;
-        }
-
-        .message-content pre code {
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            padding: 0;
-            background: transparent;
-            white-space: pre;
-            word-spacing: normal;
-            word-break: normal;
-            overflow-x: auto;
-        }
-
-        .message-content ul,
-        .message-content ol {
-            padding-left: 2em;
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        .message-content li {
-            margin: 4px 0;
-        }
-
-        .message-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 10px 0;
-        }
-
-        .message-content table th,
-        .message-content table td {
-            padding: 6px 13px;
-            border: 1px solid #dfe2e5;
-        }
-
-        .message-content table tr {
-            background-color: #fff;
-            border-top: 1px solid #c6cbd1;
-        }
-
-        .message-content table tr:nth-child(2n) {
-            background-color: #f6f8fa;
-        }
-
-        .message-content img {
-            max-width: 100%;
-            box-sizing: content-box;
-            background-color: #fff;
-            border-radius: 3px;
-        }
-
-        .message-content hr {
-            height: 0.25em;
-            padding: 0;
-            margin: 24px 0;
-            background-color: #e1e4e8;
-            border: 0;
-        }
-
-        .message-content a {
-            color: #0366d6;
-            text-decoration: none;
-        }
-
-        .message-content a:hover {
-            text-decoration: underline;
-        }
-
-        .message-content code {
-            padding: 0.2em 0.4em;
-            margin: 0;
-            font-size: 85%;
-            background-color: rgba(27, 31, 35, 0.05);
-            border-radius: 3px;
-            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-        }
-
-        /* Style adaptations for dark/light themes */
-        .user-message .message-content blockquote {
-            border-left-color: rgba(255, 255, 255, 0.3);
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .user-message .message-content code {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .user-message .message-content a {
-            color: #58a6ff;
-        }
-
-        .user-message .message-content table th,
-        .user-message .message-content table td {
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .user-message .message-content table tr {
-            background-color: transparent;
-            border-top-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .user-message .message-content table tr:nth-child(2n) {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        /* 添加左边栏切换按钮样式 */
-        .sidebar-toggle {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #0c4a6e, #0369a1);
-            border: none;
-            color: white;
-            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
-            z-index: 1000;
-            display: none;
-            transition: all 0.3s;
-        }
-
-        .sidebar-toggle:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(45deg, #0369a1, #0ea5e9);
-            box-shadow: 0 6px 15px rgba(14, 165, 233, 0.6);
-        }
-
-        /* 响应式调整 */
-        @media (max-width: 768px) {
-            .sidebar-toggle {
-                display: block;
-            }
-            
             .history-sidebar {
                 position: fixed;
                 left: -100%;
                 top: 0;
                 bottom: 0;
                 width: 80%;
-                z-index: 1000;
+                background: white;
+                z-index: 1050;
                 transition: left 0.3s ease;
-                background: rgba(248, 249, 250, 0.95);
             }
-            
             .history-sidebar.show {
                 left: 0;
             }
-            
-            .chat-container {
-                height: calc(100vh - 140px);
+            .sidebar-toggle {
+                position: fixed;
+                bottom: 1rem;
+                left: 1rem;
+                z-index: 1100;
             }
         }
-
-        /* 添加代码语言标签 */
-        .message-content pre::before {
-            content: attr(data-language);
-            position: absolute;
-            top: 0;
-            right: 0;
-            padding: 4px 8px;
-            font-size: 12px;
-            font-family: 'Segoe UI', sans-serif;
-            background: rgba(255,255,255,0.1);
-            border-radius: 0 8px 0 8px;
-            color: #abb2bf;
-        }
-
-        /* 用户消息中的代码块样式调整 */
-        .user-message .message-content pre {
-            background: rgba(40, 44, 52, 0.8);
-        }
-
-        /* 修改复制按钮样式 */
-        .copy-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            padding: 4px;          /* 减小内边距 */
-            width: 24px;          /* 设置固定宽度 */
-            height: 24px;         /* 保持正方形 */
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(171, 178, 191, 0.3);
-            border-radius: 4px;
-            color: #abb2bf;
-            cursor: pointer;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s, background 0.2s, border-color 0.2s;
-        }
-
-        .copy-btn i {
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center; /* 确保图标居中 */
-        }
-
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .copy-btn.success {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-        }
-
-        /* 代码块的复制按钮位置调整 */
-        .message-content pre .copy-btn {
-            top: 4px;
-            right: 80px;
-        }
-
-        /* 思考内容的复制按钮位置调整 */
-        .thinking-content .copy-btn {
-            top: 4px;
-            right: 4px;
-        }
-
-        /* 消息块的复制按钮位置调整 */
-        .message-content .copy-btn.copy-all {
-            top: 4px;
-            right: 4px;
-        }
-
-        /* 鼠标悬停时显示复制按钮 */
-        .message-content:hover .copy-btn,
-        .thinking-content:hover .copy-btn,
-        pre:hover .copy-btn {
-            opacity: 1;
-        }
-
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* 复制成功的样式 */
-        .copy-btn.success {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-        }
-
-        /* 调整消息内容的定位 */
         .message-content {
             position: relative;
         }
-
-        /* 调整代码块的定位 */
-        .message-content pre {
-            position: relative;
-        }
-
-        /* 调整思考内容的定位 */
         .thinking-content {
-            position: relative;
+            margin-bottom: 0.5rem;
+        }
+        .thinking-header {
+            cursor: pointer;
+            padding: 0.5rem;
+            background-color: #f1f3f5;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .thinking-header.collapsed .fa-caret-down {
+            transform: rotate(-90deg);
+        }
+        .thinking-body {
+            display: block;
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            margin-top: 0.25rem;
+        }
+        .thinking-body.collapsed {
+            display: none;
+        }
+        #message-input {
+            overflow-y: auto; /* 内容过多时显示垂直滚动条 */
         }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <div class="d-flex align-items-center">
-            <div class="welcome-text">
-                <i class="fas fa-robot"></i> 小智欢迎您：<span id="username-display">{{ current_user.username }}</span>
+    {% if current_user.is_authenticated %}
+    <nav class="navbar navbar-expand navbar-light fixed-top">
+        <div class="container-fluid">
+            <span class="navbar-text">
+                <i class="fas fa-robot me-2"></i> 小智欢迎您：<span id="username">{{ current_user.username }}</span>
+            </span>
+            <div class="ms-auto">
+                {% if current_user.is_admin %}
+                <a href="/admin" class="btn btn-outline-primary me-2"><i class="fas fa-users-cog"></i> 后台管理</a>
+                {% endif %}
+                <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> 退出</a>
             </div>
-            <a href="/logout" class="btn btn-light btn-sm ms-3">
-                <i class="fas fa-sign-out-alt"></i> 退出
-            </a>
         </div>
-        
-        {% if current_user.is_admin %}
-        <a href="/admin" class="btn btn-light">
-            <i class="fas fa-cog"></i> 管理面板
-        </a>
-        {% endif %}
-    </div>
-    
-    <div class="container-fluid">
+    </nav>
+    {% endif %}
+
+    <div class="container-fluid mt-5 pt-3">
         <div class="chat-container">
             <div class="row h-100">
-                <div class="col-md-3 col-lg-3 history-sidebar">
-                    <button class="btn btn-primary new-chat-btn" onclick="createNewChat()">
+                <div class="col-md-3 history-sidebar p-3">
+                    <button class="btn btn-primary w-100 mb-3" onclick="createNewChat()">
                         <i class="fas fa-plus"></i> 新建聊天
                     </button>
                     <h5><i class="fas fa-history"></i> 聊天历史</h5>
                     <div id="history-list"></div>
                 </div>
-                <div class="col-md-9 col-lg-9 d-flex flex-column">
+                <div class="col-md-9 d-flex flex-column">
                     <div id="chat-window"></div>
-                    <div class="loading-indicator" id="loading-indicator">
-                        <i class="fas fa-spinner fa-2x"></i>
+                    <div class="loading-indicator text-center p-3 d-none" id="loading-indicator">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
                         <p>正在加载...</p>
                     </div>
                     <div class="input-group">
-                        <input type="text" id="message-input" class="form-control" placeholder="输入消息...">
-                        <button class="btn btn-primary btn-send" onclick="sendMessage()">
+                        <textarea id="message-input" class="form-control" placeholder="输入消息..." rows="3"></textarea>
+                        <button class="btn btn-primary ms-2" onclick="sendMessage()">
                             <i class="fas fa-paper-plane"></i> 发送
                         </button>
                     </div>
@@ -988,12 +172,11 @@
         </div>
     </div>
 
-    <!-- 添加左边栏切换按钮 -->
-    <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <button class="btn btn-primary sidebar-toggle d-md-none" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- 编辑聊天标题模态框 -->
+    <!-- Modals remain unchanged -->
     <div class="modal fade" id="editTitleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1013,7 +196,6 @@
         </div>
     </div>
 
-    <!-- 删除确认模态框 -->
     <div class="modal fade" id="deleteChatModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1033,11 +215,12 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script>
+        // JavaScript remains unchanged
         let currentChatId = null;
 
         function loadHistory() {
@@ -1065,8 +248,6 @@
                             }
                         };
                         historyList.appendChild(div);
-                        
-                        // 如果是当前聊天，添加活动状态
                         if (chat.id === currentChatId) {
                             div.classList.add('active');
                         }
@@ -1078,7 +259,6 @@
             event.stopPropagation();
             document.getElementById('edit-chat-id').value = chatId;
             document.getElementById('edit-chat-title').value = currentTitle;
-            
             const modal = new bootstrap.Modal(document.getElementById('editTitleModal'));
             modal.show();
         }
@@ -1086,17 +266,13 @@
         function saveTitle() {
             const chatId = document.getElementById('edit-chat-id').value;
             const newTitle = document.getElementById('edit-chat-title').value;
-            
             if (!newTitle.trim()) {
                 alert('标题不能为空');
                 return;
             }
-            
             fetch(`/chat/history/${chatId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: newTitle })
             })
             .then(response => response.json())
@@ -1114,34 +290,27 @@
         function deleteChat(event, chatId) {
             event.stopPropagation();
             document.getElementById('delete-chat-id').value = chatId;
-            
             const modal = new bootstrap.Modal(document.getElementById('deleteChatModal'));
             modal.show();
         }
 
         function confirmDeleteChat() {
             const chatId = document.getElementById('delete-chat-id').value;
-            
-            fetch(`/chat/history/${chatId}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteChatModal'));
-                    modal.hide();
-                    
-                    // 如果删除的是当前聊天，清空聊天窗口
-                    if (currentChatId === parseInt(chatId)) {
-                        currentChatId = null;
-                        document.getElementById('chat-window').innerHTML = '';
+            fetch(`/chat/history/${chatId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteChatModal'));
+                        modal.hide();
+                        if (currentChatId === parseInt(chatId)) {
+                            currentChatId = null;
+                            document.getElementById('chat-window').innerHTML = '';
+                        }
+                        loadHistory();
+                    } else {
+                        alert('删除聊天失败: ' + data.error);
                     }
-                    
-                    loadHistory();
-                } else {
-                    alert('删除聊天失败: ' + data.error);
-                }
-            });
+                });
         }
 
         function createNewChat() {
@@ -1154,24 +323,19 @@
                 });
         }
 
-        // 修改 loadChat 函数，确保历史记录也有折叠功能
         function loadChat(chatId) {
             currentChatId = chatId;
-            
             document.getElementById('chat-window').innerHTML = '';
-            document.getElementById('loading-indicator').style.display = 'block';
-            
+            document.getElementById('loading-indicator').classList.remove('d-none');
             fetch(`/chat/history/${chatId}`)
                 .then(response => response.json())
                 .then(messages => {
-                    document.getElementById('loading-indicator').style.display = 'none';
-                    
+                    document.getElementById('loading-indicator').classList.add('d-none');
                     const chatWindow = document.getElementById('chat-window');
                     chatWindow.innerHTML = '';
                     messages.forEach(msg => {
                         addMessageToChat(msg.role, msg.content);
                     });
-                    
                     chatWindow.scrollTop = chatWindow.scrollHeight;
                     applyHighlighting();
                 });
@@ -1180,42 +344,43 @@
         function sendMessage() {
             const messageInput = document.getElementById('message-input');
             const message = messageInput.value;
-            if (!message.trim()) return; // 不发送空消息
-            
+            if (!message.trim()) return;
             if (!currentChatId) {
                 fetch('/chat/new', { method: 'POST' })
                     .then(response => response.json())
                     .then(data => {
                         currentChatId = data.chat_id;
                         sendMessageToServer(message);
-                        loadHistory(); // 更新历史记录以显示新聊天
+                        loadHistory();
                     });
             } else {
                 sendMessageToServer(message);
             }
-            
-            // 清空输入框
             messageInput.value = '';
         }
 
-        // Update the sendMessageToServer function too
         function sendMessageToServer(message) {
-            // Display user message on the UI
             const chatWindow = document.getElementById('chat-window');
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'message user-message';
-            
-            // Format user message with markdown
-            const formattedUserMessage = formatMessageContent(message);
-            
-            userMessageDiv.innerHTML = `
-                <img src="/static/user-avatar.png" alt="user" class="avatar">
-                <div class="message-content">${formattedUserMessage}</div>
-            `;
-            chatWindow.appendChild(userMessageDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            
-            // Show loading indicator
+                const escapedMessage = message
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'message user-message';
+                const formattedUserMessage = formatMessageContent(message);
+                userMessageDiv.innerHTML = `
+                    <img src="/static/user-avatar.png" alt="user" class="avatar">
+                    <div class="message-content">
+                        <button class="copy-btn copy-all" data-clipboard-text="${escapedMessage}"><i class="far fa-copy"></i></button>
+                        ${formattedUserMessage}
+                    </div>
+                `;
+                chatWindow.appendChild(userMessageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                initializeClipboard(); // 初始化用户消息的复制按钮
+
             const loadingIndicator = document.createElement('div');
             loadingIndicator.className = 'message assistant-message loading-message';
             loadingIndicator.innerHTML = `
@@ -1226,51 +391,31 @@
             `;
             chatWindow.appendChild(loadingIndicator);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            
-            // Send to server
+
             fetch('/send_message', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: message,
-                    history_id: currentChatId
-                })
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ message: message, history_id: currentChatId })
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                // Remove loading message
                 chatWindow.removeChild(loadingIndicator);
-                
-                // Parse the response for thinking process and final answer
                 let response = data.response;
                 let thinkContent = '';
                 let finalResponse = response;
-                
-                // Extract <think> tag content
                 const thinkMatch = response.match(/<think>([\s\S]*?)<\/think>/);
                 if (thinkMatch) {
                     thinkContent = thinkMatch[1].trim();
                     finalResponse = response.replace(/<think>[\s\S]*?<\/think>/, '').trim();
                 }
-                
-                // Format final response with markdown
                 const formattedResponse = formatMessageContent(finalResponse);
-                
-                // Create message HTML
                 let messageHTML = `
                     <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
                     <div class="message-content">
                 `;
-                
-                // Add collapsible thinking section if available
                 if (thinkContent) {
                     const formattedThink = formatMessageContent(thinkContent);
                     messageHTML += `
@@ -1279,34 +424,22 @@
                                 <i class="fas fa-caret-down"></i>
                                 <span>查看推理过程</span>
                             </div>
-                            <div class="thinking-body">
-                                ${formattedThink}
-                            </div>
+                            <div class="thinking-body">${formattedThink}</div>
                         </div>
                     `;
                 }
-                
-                // Add final response
                 messageHTML += formattedResponse + '</div>';
-                
-                // Add assistant's reply
                 const botMessageDiv = document.createElement('div');
                 botMessageDiv.className = 'message assistant-message';
                 botMessageDiv.innerHTML = messageHTML;
                 chatWindow.appendChild(botMessageDiv);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
-                
-                // Refresh history list
                 loadHistory();
                 applyHighlighting();
             })
             .catch(error => {
-                // Remove loading message
                 chatWindow.removeChild(loadingIndicator);
-                
                 console.error('Error:', error);
-                
-                // Show error message
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.className = 'message assistant-message';
                 errorMessageDiv.innerHTML = `
@@ -1321,22 +454,18 @@
             });
         }
 
-        // 添加回车发送功能
         document.getElementById('message-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // 阻止默认行为（换行）
+                e.preventDefault();
                 sendMessage();
             }
         });
 
-        // 修改折叠切换函数，确保内容完整展示
         function toggleThinking(header) {
-            header.classList.toggle('collapsed');
+            const isCollapsed = header.classList.toggle('collapsed');
             const body = header.nextElementSibling;
-            body.classList.toggle('collapsed');
-            
-            // 确保展开时滚动到可见区域
-            if (!header.classList.contains('collapsed')) {
+            body.classList.toggle('collapsed', isCollapsed);
+            if (!isCollapsed) {
                 setTimeout(() => {
                     body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 100);
@@ -1345,81 +474,44 @@
 
         function formatMessageContent(content) {
             const parser = new DOMParser();
-            
-            // 处理数学公式
             content = content.replace(/\\\((.*?)\\\)/g, (match, formula) => {
                 try {
-                    return katex.renderToString(formula, {
-                        displayMode: false,
-                        throwOnError: false
-                    });
+                    return katex.renderToString(formula, { displayMode: false, throwOnError: false });
                 } catch (e) {
-                    console.error('KaTeX inline error:', e);
                     return match;
                 }
             });
-            
             content = content.replace(/\\\[(.*?)\\\]/g, (match, formula) => {
                 try {
-                    return katex.renderToString(formula, {
-                        displayMode: true,
-                        throwOnError: false
-                    });
+                    return katex.renderToString(formula, { displayMode: true, throwOnError: false });
                 } catch (e) {
-                    console.error('KaTeX block error:', e);
                     return match;
                 }
             });
-            
-            // 处理代码块
             let processedContent = content.replace(/```([a-z]*)\n([\s\S]*?)```/g, (match, language, code) => {
                 const highlightedCode = hljs.highlightAuto(code.trim(), language ? [language] : undefined).value;
-                // 转义代码中的特殊字符，以便安全地放入 data-clipboard-text 属性
-                const escapedCode = code.trim()
-                    .replace(/&/g, '&amp;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
-                    
-                return `\n<pre data-language="${language || 'plaintext'}">
-                    <button class="copy-btn" data-clipboard-text="${escapedCode}">
-                        <i class="far fa-copy"></i>
-                    </button>
-                    <code class="hljs language-${language || 'plaintext'}">${highlightedCode}</code>
-                </pre>\n`;
+                return `\n<pre data-language="${language || 'plaintext'}"><code class="hljs language-${language || 'plaintext'}">${highlightedCode}</code></pre>\n`;
             });
-            
-            // 处理行内代码
-            processedContent = processedContent.replace(/`([^`]+)`/g, (match, code) => {
-                return `<code class="inline-code">${code}</code>`;
-            });
-            
+            processedContent = processedContent.replace(/`([^`]+)`/g, (match, code) => `<code class="inline-code">${code}</code>`);
             let formattedContent = marked.parse(processedContent);
             const doc = parser.parseFromString(formattedContent, 'text/html');
-            
             return doc.body.innerHTML;
         }
 
-        // 在每次添加新消息后应用语法高亮
         function applyHighlighting() {
             document.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
         }
 
-        // 页面加载时获取历史记录
         document.addEventListener('DOMContentLoaded', function() {
             loadHistory();
             initializeClipboard();
         });
 
-        // 添加侧边栏切换功能
         function toggleSidebar() {
             const sidebar = document.querySelector('.history-sidebar');
             sidebar.classList.toggle('show');
-            
-            // 在移动端点击聊天历史后自动隐藏侧边栏
             if (window.innerWidth <= 768) {
                 const historyItems = document.querySelectorAll('.history-item');
                 historyItems.forEach(item => {
@@ -1430,98 +522,56 @@
             }
         }
 
-        // 初始化剪贴板功能
         function initializeClipboard() {
-            // 清除之前的事件监听器
             document.querySelectorAll('.copy-btn').forEach(btn => {
                 const clipboard = btn._clipboard;
-                if (clipboard) {
-                    clipboard.destroy();
-                }
+                if (clipboard) clipboard.destroy();
             });
-
-            // 初始化新的复制按钮
             document.querySelectorAll('.copy-btn').forEach(btn => {
                 const clipboard = new ClipboardJS(btn);
                 btn._clipboard = clipboard;
-
                 clipboard.on('success', (e) => {
                     const btn = e.trigger;
-                    btn.innerHTML = '<i class="fas fa-check"></i>';  // 只显示成功图标
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
                     btn.classList.add('success');
-                    
                     setTimeout(() => {
-                        btn.innerHTML = '<i class="far fa-copy"></i>';  // 恢复为复制图标
+                        btn.innerHTML = '<i class="far fa-copy"></i>';
                         btn.classList.remove('success');
                     }, 2000);
-                    
                     e.clearSelection();
                 });
             });
         }
 
-        // 修改添加消息的函数
         function addMessageToChat(role, content) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}-message`;
-            
-            // 转义整个消息内容
-            const escapedContent = content
-                .replace(/&/g, '&amp;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-            
             let messageHTML = `
                 <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
                 <div class="message-content">
-                    <button class="copy-btn copy-all" data-clipboard-text="${escapedContent}">
-                        <i class="far fa-copy"></i>
-                    </button>
             `;
-            
-            // 处理思考过程
             const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
             if (thinkMatch && role === 'assistant') {
                 const thinkContent = thinkMatch[1].trim();
-                const escapedThinkContent = thinkContent
-                    .replace(/&/g, '&amp;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
                 const finalResponse = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
-                
                 messageHTML += `
                     <div class="thinking-content">
-                        <button class="copy-btn" data-clipboard-text="${escapedThinkContent}">
-                            <i class="far fa-copy"></i>
-                        </button>
                         <div class="thinking-header" onclick="toggleThinking(this)">
                             <i class="fas fa-caret-down"></i>
                             <span>查看推理过程</span>
                         </div>
-                        <div class="thinking-body">
-                            ${formatMessageContent(thinkContent)}
-                        </div>
+                        <div class="thinking-body">${formatMessageContent(thinkContent)}</div>
                     </div>
                     ${formatMessageContent(finalResponse)}
                 `;
             } else {
                 messageHTML += formatMessageContent(content);
             }
-            
             messageHTML += '</div>';
             messageDiv.innerHTML = messageHTML;
-            
             const chatWindow = document.getElementById('chat-window');
             chatWindow.appendChild(messageDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            
-            // 初始化新添加消息的复制功能
-            initializeClipboard();
-            // 应用代码高亮
             applyHighlighting();
         }
     </script>

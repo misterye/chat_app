@@ -32,7 +32,7 @@ def load_user(user_id):
     user = c.fetchone()
     conn.close()
     if user:
-        return User(user[0], user[1], user[2])
+        return User(user[0], user[1], user[2]) # user[2] 是 is_admin
     return None
 
 def get_db_connection():
@@ -90,21 +90,26 @@ def admin():
         if action == 'add':
             username = request.form['username']
             password = request.form['password']
+            is_admin = 'is_admin' in request.form  # 复选框选中时为 True，否则 False
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
-        elif action == 'delete':
-            user_id = request.form['user_id']
-            c.execute('DELETE FROM users WHERE id = ? AND is_admin = 0', (user_id,))  # 防止删除管理员
-            c.execute('DELETE FROM chat_history WHERE user_id = ?', (user_id,))
+            c.execute('INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)',
+                      (username, hashed_password, int(is_admin)))
         elif action == 'update':
             user_id = request.form['user_id']
             username = request.form['username']
             password = request.form['password']
+            is_admin = 'is_admin' in request.form  # 复选框选中时为 True，否则 False
             if password:
                 hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-                c.execute('UPDATE users SET username = ?, password = ? WHERE id = ?', (username, hashed_password, user_id))
+                c.execute('UPDATE users SET username = ?, password = ?, is_admin = ? WHERE id = ?',
+                          (username, hashed_password, int(is_admin), user_id))
             else:
-                c.execute('UPDATE users SET username = ? WHERE id = ?', (username, user_id))
+                c.execute('UPDATE users SET username = ?, is_admin = ? WHERE id = ?',
+                          (username, int(is_admin), user_id))
+        elif action == 'delete':
+            user_id = request.form['user_id']
+            c.execute('DELETE FROM users WHERE id = ? AND is_admin = 0', (user_id,))
+            c.execute('DELETE FROM chat_history WHERE user_id = ?', (user_id,))
         conn.commit()
     
     # 修改查询以包含 is_admin 字段
