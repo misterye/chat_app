@@ -15,9 +15,177 @@
         .navbar {
             background-color: #fff;
             border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 1060;
+        }
+        .navbar-text {
+            display: flex;
+            align-items: center;
+        }
+        .admin-controls {
+            display: flex;
+            align-items: center;
+        }
+        .back-btn {
+            color: #4a6cf7;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logout-btn {
+            color: #6c757d;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
         }
         .card {
             margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+        }
+        .btn {
+            border-radius: 0.375rem;
+        }
+        /* 聊天记录弹窗样式 */
+        .modal-fullscreen-md-down .modal-header {
+            padding: 0.75rem 1rem;
+        }
+        .modal-fullscreen-md-down .modal-title {
+            font-size: 1rem;
+            max-width: 80%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .modal-fullscreen-md-down .btn-close {
+            padding: 0.5rem;
+            margin: -0.5rem -0.5rem -0.5rem auto;
+        }
+        /* 修复PC设备上的弹窗样式 */
+        .modal-dialog.modal-lg {
+            max-width: 800px;
+            margin-top: 70px; /* 增加顶部边距，避免被导航栏遮挡 */
+        }
+        .modal-content {
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            border-bottom: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+        .modal-title {
+            font-size: 1.1rem;
+            max-width: 80%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 2rem;
+        }
+        .btn-close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1080;
+            opacity: 0.8;
+            padding: 0.5rem;
+            background-color: transparent;
+            border: none;
+            font-size: 1.25rem;
+            box-shadow: none;
+        }
+        .btn-close:hover {
+            opacity: 1;
+            background-color: rgba(0,0,0,0.05);
+        }
+        .chat-message {
+            display: flex;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+        }
+        .chat-message .message-content {
+            max-width: 80%;
+            word-break: break-word;
+        }
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+        .chat-message.user .message-content {
+            margin-left: auto;
+        }
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+            .navbar-text {
+                font-size: 0.9rem;
+            }
+            .admin-controls {
+                gap: 0.5rem;
+            }
+            .back-btn, .logout-btn {
+                font-size: 0.9rem;
+                margin-left: 0.5rem;
+            }
+            .back-btn i, .logout-btn i {
+                font-size: 1rem;
+            }
+            .btn-text {
+                display: none;
+            }
+            .table {
+                font-size: 0.9rem;
+            }
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            /* 移动设备上的模态框样式 */
+            .modal-fullscreen-md-down {
+                margin-top: 60px; /* 移动设备上的顶部边距 */
+            }
+            .modal-fullscreen-md-down .modal-content {
+                height: calc(100vh - 60px); /* 减去顶部边距 */
+            }
+        }
+        /* 自定义关闭按钮 */
+        .custom-close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            z-index: 1080;
+            width: 30px;
+            height: 30px;
+            background-color: #f1f3f5;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6c757d;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .custom-close-btn:hover {
+            background-color: #e9ecef;
+            color: #495057;
         }
     </style>
 </head>
@@ -25,11 +193,17 @@
     <nav class="navbar navbar-expand navbar-light fixed-top">
         <div class="container-fluid">
             <span class="navbar-text">
-                <i class="fas fa-robot me-2"></i> 小智欢迎您：<span id="username">{{ current_user.username }}</span>
+                <i class="fas fa-robot me-2"></i> <span class="d-none d-md-inline">小智欢迎您：</span><span id="username">{{ current_user.username }}</span>
             </span>
-            <div class="ms-auto">
-                <a href="/chat" class="btn btn-outline-primary me-2"><i class="fas fa-arrow-left"></i> 返回聊天</a>
-                <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> 退出</a>
+            <div class="admin-controls ms-auto">
+                <a href="/chat" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> 
+                    <span class="btn-text">返回聊天</span>
+                </a>
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> 
+                    <span class="btn-text">退出</span>
+                </a>
             </div>
         </div>
     </nav>
@@ -58,14 +232,14 @@
                                 <td>{% if 'chat_count' in user %}{{ user.chat_count }}{% else %}0{% endif %}</td>
                                 <td>
                                     <button class="btn btn-warning btn-sm me-1" onclick="editUser({{ user.id }}, '{{ user.username }}')">
-                                        <i class="fas fa-edit"></i> 编辑
+                                        <i class="fas fa-edit"></i> <span class="d-none d-md-inline">编辑</span>
                                     </button>
                                     <button class="btn btn-info btn-sm me-1" onclick="viewChats({{ user.id }}, '{{ user.username }}')">
-                                        <i class="fas fa-comments"></i> 聊天记录
+                                        <i class="fas fa-comments"></i> <span class="d-none d-md-inline">聊天记录</span>
                                     </button>
                                     {% if not user.is_admin %}
                                     <button class="btn btn-danger btn-sm" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
-                                        <i class="fas fa-trash"></i> 删除
+                                        <i class="fas fa-trash"></i> <span class="d-none d-md-inline">删除</span>
                                     </button>
                                     {% endif %}
                                 </td>
@@ -139,12 +313,18 @@
     </div>
 
     <!-- Chat History Modal -->
-    <div class="modal fade" id="chatHistoryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="chatHistoryModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-fullscreen-md-down modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-comments me-2"></i> <span id="chat-history-username"></span> 的聊天记录</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">
+                        <i class="fas fa-comments me-2"></i> 
+                        <span id="chat-history-username"></span> 
+                        <span class="d-none d-md-inline">的聊天记录</span>
+                    </h5>
+                    <button type="button" class="custom-close-btn" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 <div class="modal-body" id="chat-history-content">
                     <!-- Chat history will be loaded here dynamically -->
@@ -164,6 +344,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
             chatHistoryModal = new bootstrap.Modal(document.getElementById('chatHistoryModal'));
+            
+            // 确保模态框不被导航栏遮挡
+            document.getElementById('chatHistoryModal').addEventListener('shown.bs.modal', function () {
+                const modalDialog = this.querySelector('.modal-dialog');
+                const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                modalDialog.style.marginTop = (navbarHeight + 10) + 'px';
+            });
         });
         
         function editUser(userId, username) {
@@ -190,7 +377,7 @@
         
         function viewChats(userId, username) {
             document.getElementById('chat-history-username').textContent = username;
-            document.getElementById('chat-history-content').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p>正在加载聊天记录...</p></div>';
+            document.getElementById('chat-history-content').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">正在加载聊天记录...</p></div>';
             
             fetch(`/api/user/${userId}/chats`)
                 .then(response => response.json())
@@ -198,7 +385,7 @@
                     const chatHistoryContent = document.getElementById('chat-history-content');
                     
                     if (data.length === 0) {
-                        chatHistoryContent.innerHTML = '<p class="text-center">暂无聊天记录</p>';
+                        chatHistoryContent.innerHTML = '<div class="text-center py-4"><p>暂无聊天记录</p></div>';
                         return;
                     }
                     
@@ -206,16 +393,16 @@
                     data.forEach(chat => {
                         html += `<div class="chat-history-item mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6>${chat.title}</h6>
+                                <h6 class="mb-0 text-truncate" style="max-width: 70%;">${chat.title}</h6>
                                 <small class="text-muted">${chat.created_at}</small>
                             </div>
-                            <div class="chat-messages p-3 border rounded" style="max-height: 300px; overflow-y: auto;">`;
+                            <div class="chat-messages p-3 border rounded" style="max-height: 250px; overflow-y: auto;">`;
                         
                         if (chat.messages && chat.messages.length > 0) {
                             chat.messages.forEach(msg => {
                                 const isUser = msg.role === 'user';
                                 html += `<div class="chat-message ${isUser ? 'user' : 'bot'}">
-                                    <img src="/static/${isUser ? 'user' : 'bot'}-avatar.png" alt="${msg.role}" class="avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                                    <img src="/static/${isUser ? 'user' : 'bot'}-avatar.png" alt="${msg.role}" class="avatar" style="width: 32px; height: 32px; border-radius: 50%;">
                                     <div class="message-content p-2 ${isUser ? 'bg-primary text-white' : 'bg-light'}" style="border-radius: 10px;">${msg.content}</div>
                                 </div>`;
                             });
@@ -226,7 +413,7 @@
                         html += `</div>
                             <div class="d-flex justify-content-end mt-2">
                                 <button class="btn btn-sm btn-danger" onclick="deleteChat(${chat.id}, ${userId})">
-                                    <i class="fas fa-trash"></i> 删除此对话
+                                    <i class="fas fa-trash"></i> <span class="d-none d-md-inline">删除此对话</span>
                                 </button>
                             </div>
                         </div>`;
@@ -236,7 +423,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('chat-history-content').innerHTML = '<p class="text-center text-danger">加载聊天记录失败</p>';
+                    document.getElementById('chat-history-content').innerHTML = '<div class="text-center py-4"><p class="text-danger">加载聊天记录失败</p></div>';
                 });
             
             chatHistoryModal.show();

@@ -13,86 +13,278 @@
     <link href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #ffffff;
             min-height: 100vh;
-        }
-        .chat-container {
-            height: 85vh;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
         }
-        .history-sidebar {
-            border-right: 1px solid #dee2e6;
-            height: 100%;
-            overflow-y: auto;
+        .navbar {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 1060;
         }
-        #chat-window {
-            height: calc(85vh - 70px);
-            overflow-y: auto;
-            padding: 1rem;
-        }
-        .message {
-            margin-bottom: 1rem;
+        .navbar-text {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
+        }
+        .admin-controls {
+            display: flex;
+            align-items: center;
+        }
+        .admin-btn {
+            color: #4a6cf7;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
+        .logout-btn {
+            color: #6c757d;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+        .chat-container {
+            height: calc(100vh - 56px); /* 减去导航栏高度 */
+            background: white;
+            overflow: hidden;
+            display: flex;
+        }
+        .history-sidebar {
+            border-right: 1px solid #eaeaea;
+            height: 100%;
+            overflow-y: auto;
+            width: 260px;
+            background-color: #ffffff;
+            padding: 0;
+            position: fixed;
+            left: 0;
+            top: 56px; /* 导航栏高度 */
+            bottom: 0;
+            z-index: 100;
+        }
+        .main-content {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #chat-window {
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            padding: 1rem;
+            flex: 1;
+            margin-bottom: 80px;
+        }
+        .message {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
         .user-message {
-            flex-direction: row-reverse;
+            justify-content: flex-end;
         }
         .message-content {
-            max-width: 70%;
-            padding: 0.75rem;
-            border-radius: 0.375rem;
-            background-color: #fff;
-            border: 1px solid #dee2e6;
+            max-width: 85%;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+            border: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .user-message .message-content {
-            background-color: #0d6efd;
-            color: white;
+            background-color: #f1f3f5;
+            color: #212529;
+        }
+        .assistant-message .message-content {
+            background-color: #ffffff;
+            border: 1px solid #eaeaea;
         }
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
+            object-fit: cover;
         }
         .history-item {
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
             border-radius: 0.25rem;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #333;
         }
         .history-item:hover {
-            background-color: #e9ecef;
+            background-color: #f1f3f5;
         }
         .history-item.active {
-            background-color: #0d6efd;
-            color: white;
+            background-color: #f1f3f5;
+            color: #333;
+        }
+        .history-actions {
+            display: none;
+        }
+        .history-item:hover .history-actions {
+            display: block;
+        }
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 0;
+            background-color: #ffffff;
+            border-top: 1px solid #eaeaea;
+            padding: 1rem;
+            z-index: 50;
         }
         .input-group {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        #message-input-desktop, #message-input-mobile {
+            border: none;
+            resize: none;
+            background-color: transparent;
+            flex-grow: 1;
             padding: 0.5rem;
+            outline: none;
+            box-shadow: none;
+        }
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .input-action-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        .input-action-btn:hover {
+            background-color: #e9ecef;
+        }
+        .send-btn {
+            background-color: #4a6cf7;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        .send-btn:hover {
+            background-color: #3a5ce5;
         }
         @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+            .navbar-text {
+                font-size: 0.9rem;
+            }
+            .admin-controls {
+                gap: 0.5rem;
+            }
+            .admin-btn, .logout-btn {
+                font-size: 0.9rem;
+                margin-left: 0.5rem;
+            }
+            .admin-btn i, .logout-btn i {
+                font-size: 1rem;
+            }
+            .btn-text {
+                display: none;
+            }
             .history-sidebar {
                 position: fixed;
-                left: -100%;
-                top: 0;
+                left: -260px;
+                top: 56px; /* 导航栏高度 */
                 bottom: 0;
-                width: 80%;
+                width: 260px;
                 background: white;
                 z-index: 1050;
                 transition: left 0.3s ease;
+                height: calc(100vh - 56px);
             }
             .history-sidebar.show {
                 left: 0;
             }
-            .sidebar-toggle {
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .input-container {
+                left: 0;
+                width: 100%;
+            }
+            .sidebar-overlay {
+                display: none;
                 position: fixed;
-                bottom: 1rem;
-                left: 1rem;
-                z-index: 1100;
+                top: 56px; /* 导航栏高度 */
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1040;
+            }
+            .sidebar-overlay.show {
+                display: block;
+            }
+            .mobile-input-container {
+                display: flex;
+                align-items: center;
+                background-color: #f8f9fa;
+                border-radius: 1.5rem;
+                padding-right: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }
+            .mobile-menu-btn {
+                background-color: #4a6cf7;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            .send-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         }
         .message-content {
@@ -116,7 +308,7 @@
         .thinking-body {
             display: block;
             padding: 0.5rem;
-            border: 1px solid #dee2e6;
+            border: 1px solid #eaeaea;
             border-radius: 0.25rem;
             margin-top: 0.25rem;
         }
@@ -124,57 +316,298 @@
             display: none;
         }
         #message-input {
-            overflow-y: auto; /* 内容过多时显示垂直滚动条 */
+            overflow-y: auto;
+        }
+        .app-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: bold;
+            font-size: 1.25rem;
+            color: #4a6cf7;
+        }
+        .app-logo {
+            margin-right: 0.5rem;
+        }
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #f8f9fa;
+            border: 1px solid #eaeaea;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            margin: 1rem;
+            width: calc(100% - 2rem);
+            color: #333;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .new-chat-btn:hover {
+            background-color: #f1f3f5;
+        }
+        .history-section {
+            padding: 0 1rem;
+        }
+        .history-section-title {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin: 1rem 0 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .welcome-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+        }
+        .welcome-message h2 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .welcome-message p {
+            color: #6c757d;
+            max-width: 600px;
+            font-size: 1rem;
+        }
+        .welcome-icon {
+            margin-bottom: 1.5rem;
+            color: #4a6cf7;
+        }
+        .welcome-icon svg {
+            width: 60px;
+            height: 60px;
+            fill: #4a6cf7;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .message-content:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn.success {
+            color: #28a745;
+        }
+        .loading-message .message-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6c757d;
+        }
+        .thinking-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            border: 1px solid #eaeaea;
+        }
+        .thinking-toggle i {
+            transition: transform 0.2s;
+        }
+        .thinking-toggle.collapsed i {
+            transform: rotate(-90deg);
+        }
+        .mobile-input-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                background-color: #4a6cf7;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 8px;
+                cursor: pointer;
+            }
+            
+            #message-input {
+                flex: 1;
+            }
+            .send-btn {
+                width: auto;
+                height: auto;
+                border-radius: 1.5rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+        /* 移动设备上的菜单按钮样式 */
+        .mobile-menu-btn-container {
+            margin-right: 8px;
+        }
+        
+        .mobile-menu-btn {
+            background-color: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* 发送按钮样式统一 */
+        .send-btn {
+            background-color: #4a6cf7;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            padding: 0;
+        }
+        
+        .send-btn:hover {
+            background-color: #3a5ce5;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-input-container {
+                display: flex;
+                align-items: center;
+                background-color: #f8f9fa;
+                border-radius: 1.5rem;
+                padding-right: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }
         }
     </style>
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand navbar-light fixed-top">
+    <nav class="navbar navbar-expand navbar-light bg-white fixed-top">
         <div class="container-fluid">
             <span class="navbar-text">
-                <i class="fas fa-robot me-2"></i> 小智欢迎您：<span id="username">{{ current_user.username }}</span>
+                <i class="fas fa-robot me-2"></i> <span class="d-none d-md-inline">小智欢迎您：</span><span id="username">{{ current_user.username }}</span>
             </span>
-            <div class="ms-auto">
+            <div class="admin-controls ms-auto">
                 {% if current_user.is_admin %}
-                <a href="/admin" class="btn btn-outline-primary me-2"><i class="fas fa-users-cog"></i> 后台管理</a>
+                <a href="/admin" class="admin-btn">
+                    <i class="fas fa-users-cog"></i> 
+                    <span class="btn-text">后台管理</span>
+                </a>
                 {% endif %}
-                <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> 退出</a>
+                <a href="/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> 
+                    <span class="btn-text">退出</span>
+                </a>
             </div>
         </div>
     </nav>
+    <div style="height: 56px;"></div> <!-- 为固定导航栏留出空间 -->
     {% endif %}
-
-    <div class="container-fluid mt-5 pt-3">
-        <div class="chat-container">
-            <div class="row h-100">
-                <div class="col-md-3 history-sidebar p-3">
-                    <button class="btn btn-primary w-100 mb-3" onclick="createNewChat()">
-                        <i class="fas fa-plus"></i> 新建聊天
-                    </button>
-                    <h5><i class="fas fa-history"></i> 聊天历史</h5>
-                    <div id="history-list"></div>
+    
+    <div class="chat-container">
+        <div class="history-sidebar">
+            <div class="app-header">
+                申斯小智
+            </div>
+            <button class="new-chat-btn" onclick="createNewChat()">
+                <i class="fas fa-plus"></i> 开启新对话
+            </button>
+            <div class="history-section">
+                <div class="history-section-title">
+                    <span>7 天内</span>
                 </div>
-                <div class="col-md-9 d-flex flex-column">
-                    <div id="chat-window"></div>
-                    <div class="loading-indicator text-center p-3 d-none" id="loading-indicator">
-                        <i class="fas fa-spinner fa-spin fa-2x"></i>
-                        <p>正在加载...</p>
+                <div id="history-list"></div>
+            </div>
+        </div>
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <div class="main-content">
+            <div id="chat-window">
+                <div class="welcome-message">
+                    <div class="welcome-icon">
+                        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16.0001 2.66675C8.63608 2.66675 2.66675 8.63608 2.66675 16.0001C2.66675 23.3641 8.63608 29.3334 16.0001 29.3334C23.3641 29.3334 29.3334 23.3641 29.3334 16.0001C29.3334 8.63608 23.3641 2.66675 16.0001 2.66675Z" fill="#4a6cf7"/>
+                            <path d="M15.9999 5.33325C10.1091 5.33325 5.33325 10.1091 5.33325 15.9999C5.33325 21.8908 10.1091 26.6666 15.9999 26.6666C21.8908 26.6666 26.6666 21.8908 26.6666 15.9999C26.6666 10.1091 21.8908 5.33325 15.9999 5.33325ZM13.9999 20.6666C13.9999 21.2189 13.5522 21.6666 12.9999 21.6666C12.4477 21.6666 11.9999 21.2189 11.9999 20.6666V11.3333C11.9999 10.781 12.4477 10.3333 12.9999 10.3333C13.5522 10.3333 13.9999 10.781 13.9999 11.3333V20.6666ZM19.9999 20.6666C19.9999 21.2189 19.5522 21.6666 18.9999 21.6666C18.4477 21.6666 17.9999 21.2189 17.9999 20.6666V11.3333C17.9999 10.781 18.4477 10.3333 18.9999 10.3333C19.5522 10.3333 19.9999 10.781 19.9999 11.3333V20.6666Z" fill="white"/>
+                        </svg>
                     </div>
-                    <div class="input-group">
-                        <textarea id="message-input" class="form-control" placeholder="输入消息..." rows="3"></textarea>
-                        <button class="btn btn-primary ms-2" onclick="sendMessage()">
-                            <i class="fas fa-paper-plane"></i> 发送
+                    <h2>我是申斯小智, 很高兴见到你!</h2>
+                    <p>我可以帮你写代码、写作各种创意内容，请把你的任务交给我吧~</p>
+                </div>
+            </div>
+            <div class="loading-indicator text-center p-3 d-none" id="loading-indicator">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>正在加载...</p>
+            </div>
+            <div style="height: 35px;"></div> <!-- 为消息框下端留出空间 -->
+            <div class="input-container">
+                <div class="input-group d-none d-md-flex">
+                    <textarea id="message-input-desktop" class="form-control" placeholder="给小智发送消息" rows="2"></textarea>
+                    <div class="input-actions">
+                        <button class="input-action-btn" title="深度思考">
+                            <i class="fas fa-brain"></i>
+                        </button>
+                        <button class="input-action-btn" title="联网搜索">
+                            <i class="fas fa-globe"></i>
+                        </button>
+                        <button class="input-action-btn" title="上传文件">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="send-btn" onclick="sendMessageDesktop()" title="发送">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mobile-input-container d-flex d-md-none">
+                    <div class="mobile-menu-btn-container">
+                        <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <textarea id="message-input-mobile" class="form-control" placeholder="给小智发送消息" rows="2"></textarea>
+                    <div class="input-actions">
+                        <button class="input-action-btn" title="深度思考">
+                            <i class="fas fa-brain"></i>
+                        </button>
+                        <button class="input-action-btn" title="联网搜索">
+                            <i class="fas fa-globe"></i>
+                        </button>
+                        <button class="send-btn" onclick="sendMessageMobile()" title="发送">
+                            <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <button class="btn btn-primary sidebar-toggle d-md-none" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
 
     <!-- Modals remain unchanged -->
     <div class="modal fade" id="editTitleModal" tabindex="-1" aria-hidden="true">
@@ -220,7 +653,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script>
-        // JavaScript remains unchanged
         let currentChatId = null;
 
         function loadHistory() {
@@ -341,8 +773,28 @@
                 });
         }
 
+        function sendMessageDesktop() {
+            const messageInput = document.getElementById('message-input-desktop');
+            sendMessageCommon(messageInput);
+        }
+
+        function sendMessageMobile() {
+            const messageInput = document.getElementById('message-input-mobile');
+            sendMessageCommon(messageInput);
+        }
+
         function sendMessage() {
-            const messageInput = document.getElementById('message-input');
+            const desktopInput = document.getElementById('message-input-desktop');
+            const mobileInput = document.getElementById('message-input-mobile');
+            
+            if (window.innerWidth <= 768) {
+                sendMessageCommon(mobileInput);
+            } else {
+                sendMessageCommon(desktopInput);
+            }
+        }
+
+        function sendMessageCommon(messageInput) {
             const message = messageInput.value;
             if (!message.trim()) return;
             if (!currentChatId) {
@@ -420,11 +872,11 @@
                     const formattedThink = formatMessageContent(thinkContent);
                     messageHTML += `
                         <div class="thinking-content">
-                            <div class="thinking-header" onclick="toggleThinking(this)">
+                            <div class="thinking-header collapsed" onclick="toggleThinking(this)">
                                 <i class="fas fa-caret-down"></i>
                                 <span>查看推理过程</span>
                             </div>
-                            <div class="thinking-body">${formattedThink}</div>
+                            <div class="thinking-body collapsed">${formattedThink}</div>
                         </div>
                     `;
                 }
@@ -454,12 +906,87 @@
             });
         }
 
-        document.getElementById('message-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            const desktopInput = document.getElementById('message-input-desktop');
+            const mobileInput = document.getElementById('message-input-mobile');
+            
+            desktopInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessageDesktop();
+                }
+            });
+            
+            mobileInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessageMobile();
+                }
+            });
+            
+            loadHistory();
+            initializeClipboard();
         });
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.history-sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function initializeClipboard() {
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                const clipboard = btn._clipboard;
+                if (clipboard) clipboard.destroy();
+            });
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                const clipboard = new ClipboardJS(btn);
+                btn._clipboard = clipboard;
+                clipboard.on('success', (e) => {
+                    const btn = e.trigger;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    btn.classList.add('success');
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="far fa-copy"></i>';
+                        btn.classList.remove('success');
+                    }, 2000);
+                    e.clearSelection();
+                });
+            });
+        }
+
+        function addMessageToChat(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            let messageHTML = `
+                <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
+                <div class="message-content">
+            `;
+            const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+            if (thinkMatch && role === 'assistant') {
+                const thinkContent = thinkMatch[1].trim();
+                const finalResponse = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+                messageHTML += `
+                    <div class="thinking-content">
+                        <div class="thinking-header collapsed" onclick="toggleThinking(this)">
+                            <i class="fas fa-caret-down"></i>
+                            <span>查看推理过程</span>
+                        </div>
+                        <div class="thinking-body collapsed">${formatMessageContent(thinkContent)}</div>
+                    </div>
+                    ${formatMessageContent(finalResponse)}
+                `;
+            } else {
+                messageHTML += formatMessageContent(content);
+            }
+            messageHTML += '</div>';
+            messageDiv.innerHTML = messageHTML;
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            applyHighlighting();
+        }
 
         function toggleThinking(header) {
             const isCollapsed = header.classList.toggle('collapsed');
@@ -502,77 +1029,6 @@
             document.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            loadHistory();
-            initializeClipboard();
-        });
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.history-sidebar');
-            sidebar.classList.toggle('show');
-            if (window.innerWidth <= 768) {
-                const historyItems = document.querySelectorAll('.history-item');
-                historyItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        sidebar.classList.remove('show');
-                    });
-                });
-            }
-        }
-
-        function initializeClipboard() {
-            document.querySelectorAll('.copy-btn').forEach(btn => {
-                const clipboard = btn._clipboard;
-                if (clipboard) clipboard.destroy();
-            });
-            document.querySelectorAll('.copy-btn').forEach(btn => {
-                const clipboard = new ClipboardJS(btn);
-                btn._clipboard = clipboard;
-                clipboard.on('success', (e) => {
-                    const btn = e.trigger;
-                    btn.innerHTML = '<i class="fas fa-check"></i>';
-                    btn.classList.add('success');
-                    setTimeout(() => {
-                        btn.innerHTML = '<i class="far fa-copy"></i>';
-                        btn.classList.remove('success');
-                    }, 2000);
-                    e.clearSelection();
-                });
-            });
-        }
-
-        function addMessageToChat(role, content) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}-message`;
-            let messageHTML = `
-                <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
-                <div class="message-content">
-            `;
-            const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
-            if (thinkMatch && role === 'assistant') {
-                const thinkContent = thinkMatch[1].trim();
-                const finalResponse = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
-                messageHTML += `
-                    <div class="thinking-content">
-                        <div class="thinking-header" onclick="toggleThinking(this)">
-                            <i class="fas fa-caret-down"></i>
-                            <span>查看推理过程</span>
-                        </div>
-                        <div class="thinking-body">${formatMessageContent(thinkContent)}</div>
-                    </div>
-                    ${formatMessageContent(finalResponse)}
-                `;
-            } else {
-                messageHTML += formatMessageContent(content);
-            }
-            messageHTML += '</div>';
-            messageDiv.innerHTML = messageHTML;
-            const chatWindow = document.getElementById('chat-window');
-            chatWindow.appendChild(messageDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            applyHighlighting();
         }
     </script>
 </body>
