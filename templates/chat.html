@@ -655,6 +655,7 @@
     <script>
         let currentChatId = null;
         let deepThinkingMode = false; // 添加深度思考模式状态变量
+        let webSearchMode = false; // 添加网络搜索模式状态变量
 
         function loadHistory() {
             fetch('/chat/history')
@@ -757,6 +758,10 @@
                     // 重置深度思考模式状态
                     deepThinkingMode = false;
                     resetThinkButtonStyle();
+                    
+                    // 重置网络搜索模式状态
+                    webSearchMode = false;
+                    resetWebSearchButtonStyle();
                 });
         }
 
@@ -779,6 +784,10 @@
                     // 重置深度思考模式状态
                     deepThinkingMode = false;
                     resetThinkButtonStyle();
+                    
+                    // 重置网络搜索模式状态
+                    webSearchMode = false;
+                    resetWebSearchButtonStyle();
                 });
         }
 
@@ -847,7 +856,7 @@
             loadingIndicator.innerHTML = `
                 <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
                 <div class="message-content">
-                    <i class="fas fa-spinner fa-spin"></i> 正在思考...
+                    <i class="fas fa-spinner fa-spin"></i> ${webSearchMode ? '正在搜索网络...' : '正在思考...'}
                 </div>
             `;
             chatWindow.appendChild(loadingIndicator);
@@ -859,7 +868,8 @@
                 body: JSON.stringify({ 
                     message: message, 
                     history_id: currentChatId,
-                    deep_thinking: deepThinkingMode // 添加深度思考模式标志
+                    deep_thinking: deepThinkingMode, // 添加深度思考模式标志
+                    web_search: webSearchMode // 添加网络搜索模式标志
                 })
             })
             .then(response => {
@@ -941,9 +951,27 @@
             const thinkBtnDesktop = document.getElementById('think-btn');
             const thinkBtnMobile = document.getElementById('think-btn-mobile');
             
+            // 添加网络搜索按钮引用
+            const webSearchBtnDesktop = document.querySelector('.input-group .input-actions button[title="联网搜索"]');
+            const webSearchBtnMobile = document.querySelector('.mobile-input-container .input-actions button[title="联网搜索"]');
+            
             function toggleDeepThinking(btn) {
                 deepThinkingMode = !deepThinkingMode;
                 if (deepThinkingMode) {
+                    btn.style.backgroundColor = '#ffffff';
+                    btn.style.color = '#4a6cf7';
+                    btn.style.border = '1px solid #4a6cf7';
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.style.border = '';
+                }
+            }
+            
+            // 添加切换网络搜索状态的函数
+            function toggleWebSearch(btn) {
+                webSearchMode = !webSearchMode;
+                if (webSearchMode) {
                     btn.style.backgroundColor = '#ffffff';
                     btn.style.color = '#4a6cf7';
                     btn.style.border = '1px solid #4a6cf7';
@@ -969,8 +997,27 @@
                 }
             }
             
+            // 添加重置网络搜索按钮样式的函数
+            function resetWebSearchButtonStyle() {
+                // 重置桌面端按钮
+                webSearchBtnDesktop.style.backgroundColor = '';
+                webSearchBtnDesktop.style.color = '';
+                webSearchBtnDesktop.style.border = '';
+                
+                // 重置移动端按钮
+                if (webSearchBtnMobile) {
+                    webSearchBtnMobile.style.backgroundColor = '';
+                    webSearchBtnMobile.style.color = '';
+                    webSearchBtnMobile.style.border = '';
+                }
+                
+                // 重置状态
+                webSearchMode = false;
+            }
+            
             // 添加到全局作用域以便在其他函数中调用
             window.resetThinkButtonStyle = resetThinkButtonStyle;
+            window.resetWebSearchButtonStyle = resetWebSearchButtonStyle;
             
             thinkBtnDesktop.addEventListener('click', function() {
                 toggleDeepThinking(thinkBtnDesktop);
@@ -987,6 +1034,40 @@
                     }
                 }
             });
+            
+            // 添加网络搜索桌面端按钮点击事件
+            webSearchBtnDesktop.addEventListener('click', function() {
+                toggleWebSearch(webSearchBtnDesktop);
+                // 同步移动端按钮状态
+                if (webSearchBtnMobile) {
+                    if (webSearchMode) {
+                        webSearchBtnMobile.style.backgroundColor = '#ffffff';
+                        webSearchBtnMobile.style.color = '#4a6cf7';
+                        webSearchBtnMobile.style.border = '1px solid #4a6cf7';
+                    } else {
+                        webSearchBtnMobile.style.backgroundColor = '';
+                        webSearchBtnMobile.style.color = '';
+                        webSearchBtnMobile.style.border = '';
+                    }
+                }
+            });
+            
+            // 添加网络搜索移动端按钮点击事件
+            if (webSearchBtnMobile) {
+                webSearchBtnMobile.addEventListener('click', function() {
+                    toggleWebSearch(webSearchBtnMobile);
+                    // 同步桌面端按钮状态
+                    if (webSearchMode) {
+                        webSearchBtnDesktop.style.backgroundColor = '#ffffff';
+                        webSearchBtnDesktop.style.color = '#4a6cf7';
+                        webSearchBtnDesktop.style.border = '1px solid #4a6cf7';
+                    } else {
+                        webSearchBtnDesktop.style.backgroundColor = '';
+                        webSearchBtnDesktop.style.color = '';
+                        webSearchBtnDesktop.style.border = '';
+                    }
+                });
+            }
             
             if (thinkBtnMobile) {
                 thinkBtnMobile.addEventListener('click', function() {

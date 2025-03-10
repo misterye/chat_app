@@ -7,12 +7,17 @@ import datetime
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
+import requests  # 添加requests库用于调用Brave API
+import re
 
 # 加载环境变量
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')  # 从环境变量获取
+
+# 添加Brave Search API密钥
+BRAVE_API_KEY = os.environ.get('BRAVE_API_KEY')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -234,8 +239,138 @@ client = OpenAI(
 # 保存每个聊天对话的模型设置
 chat_model_settings = {}
 
-def send_message(message, history_id, deep_thinking=False):
+# 新增调用Brave Search API的函数
+def brave_web_search(query, count=5):
+    """
+    使用Brave Search API搜索网络内容
+    
+    参数:
+    query -- 搜索查询字符串
+    count -- 返回结果数量，默认为5
+    
+    返回:
+    搜索结果列表
+    """
     try:
+        print(f"\n=== Brave搜索API调用 ===")
+        print(f"搜索查询: {query}")
+        print(f"请求结果数量: {count}")
+        
+        # 检查API密钥是否存在
+        if not BRAVE_API_KEY:
+            print(f"错误: 未设置Brave API密钥")
+            return []
+        
+        # url = "https://api.search.brave.com/res/v1/web/search"
+        url = "https://api.satelc.us.kg/res/v1/web/search"
+        headers = {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "X-Subscription-Token": BRAVE_API_KEY
+        }
+        params = {
+            "q": query,
+            "count": count,
+            "search_lang": "zh-hans"  # 修正：使用 "zh-hans" 而不是 "zh"
+        }
+        
+        print(f"API请求URL: {url}")
+        print(f"请求参数: {params}")
+        
+        # 设置超时和重试
+        try:
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+        except requests.exceptions.Timeout:
+            print(f"API请求超时")
+            return []
+        except requests.exceptions.ConnectionError:
+            print(f"API连接错误")
+            return []
+        
+        print(f"API响应状态码: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            results = []
+            
+            # 添加数据结构验证
+            if not isinstance(data, dict):
+                print(f"错误: API返回的不是有效的JSON对象")
+                return []
+                
+            if 'web' in data and 'results' in data['web']:
+                for i, result in enumerate(data['web']['results']):
+                    results.append({
+                        'position': i + 1,
+                        'title': result.get('title', ''),
+                        'url': result.get('url', ''),
+                        'description': result.get('description', '')
+                    })
+            else:
+                print(f"警告: API响应中未找到预期的结果结构")
+                print(f"响应数据结构: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+            
+            print(f"搜索结果数量: {len(results)}")
+            print(f"搜索结果摘要:")
+            for i, res in enumerate(results):
+                if i < 3:  # 只打印前3个结果摘要
+                    print(f"  [{i+1}] {res['title'][:40]}... - {res['url']}")
+                elif i == 3:
+                    print(f"  ... 更多结果省略 ...")
+            print("=========================\n")
+            return results
+        else:
+            print(f"Brave Search API 错误: 状态码 {response.status_code}")
+            print(f"错误详情: {response.text}")
+            
+            # 特殊处理422错误 - 参数问题
+            if response.status_code == 422:
+                try:
+                    error_data = response.json()
+                    if 'error' in error_data and 'meta' in error_data['error'] and 'errors' in error_data['error']['meta']:
+                        for err in error_data['error']['meta']['errors']:
+                            print(f"参数错误: {err.get('loc', [])} - {err.get('msg', '未知错误')}")
+                except:
+                    pass
+            
+            print("=========================\n")
+            return []
+            
+    except Exception as e:
+        print(f"调用Brave Search API时出错: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        print("=========================\n")
+        return []
+
+# 格式化搜索结果为LLM可用的格式
+def format_search_results(results):
+    """将搜索结果格式化为LLM可用的文本格式"""
+    if not results:
+        return "搜索未返回任何结果。"
+    
+    formatted_text = "以下是来自互联网的搜索结果:\n\n"
+    
+    for result in results:
+        formatted_text += f"[{result['position']}] {result['title']}\n"
+        formatted_text += f"URL: {result['url']}\n"
+        formatted_text += f"描述: {result['description']}\n\n"
+    
+    print(f"\n=== 格式化的搜索结果 ===")
+    print(f"结果条数: {len(results)}")
+    print(f"格式化文本长度: {len(formatted_text)} 字符")
+    print("=========================\n")
+    
+    return formatted_text
+
+def send_message(message, history_id, deep_thinking=False, web_search=False):
+    try:
+        print(f"\n=== 消息处理开始 ===")
+        print(f"用户消息: {message}")
+        print(f"历史记录ID: {history_id}")
+        print(f"深度思考模式: {deep_thinking}")
+        print(f"网络搜索模式: {web_search}")
+        
         # 从数据库获取历史消息
         conn = get_db_connection()
         c = conn.cursor()
@@ -243,22 +378,52 @@ def send_message(message, history_id, deep_thinking=False):
         chat = c.fetchone()
         conn.close()
         if not chat:
+            print(f"错误: 未找到聊天历史 ID {history_id}")
             return 'Chat not found', 404
         
         content = json.loads(chat['content'])
+        print(f"历史消息数量: {len(content)}")
         
         # 准备消息列表，删除系统提示
         messages = []
         # 添加历史消息
         messages.extend(limit_context([{"role": msg["role"], "content": msg["content"]} for msg in content]))
+        print(f"上下文限制后的消息数量: {len(messages)}")
+        
+        # 如果开启了网络搜索，先进行搜索
+        search_results = None
+        if web_search:
+            print(f"\n=== 开始网络搜索处理 ===")
+            search_results = brave_web_search(message)
+            
+            if search_results:
+                print(f"成功获取搜索结果，正在处理...")
+                formatted_results = format_search_results(search_results)
+                
+                # 为大语言模型添加系统提示，指导如何引用搜索结果
+                system_prompt = "用户开启了联网搜索功能，你将收到相关的搜索结果。请结合这些结果回答用户的问题。回答中需要引用相关内容的出处，按照以下格式引用:[数字] 文本内容，其中数字是搜索结果的编号。确保引用是相关的，并尽可能保持原文的准确性。在回答结束时，列出相关参考链接，格式为 '[数字] URL'。"
+                print(f"添加系统提示: {system_prompt}")
+                messages.insert(0, {
+                    "role": "system", 
+                    "content": system_prompt
+                })
+                
+                # 在用户消息前添加搜索结果
+                print(f"添加搜索结果到上下文")
+                messages.append({"role": "system", "content": f"搜索结果：\n\n{formatted_results}"})
+                print(f"添加搜索结果后的消息数量: {len(messages)}")
+            else:
+                print(f"搜索未返回结果或搜索失败")
+                # 添加搜索失败的系统提示
+                messages.insert(0, {
+                    "role": "system", 
+                    "content": "用户开启了联网搜索功能，但搜索未返回任何结果。请告知用户搜索未成功，并尽可能根据你的知识回答问题，同时说明信息可能不是最新的。"
+                })
+                print(f"添加搜索失败提示后的消息数量: {len(messages)}")
+        
         # 添加新消息
         messages.append({"role": "user", "content": message})
-
-        # 添加打印用户输入消息
-        print("\n=== 用户输入 ===")
-        print(f"用户消息: {message}")
-        print(f"历史记录ID: {history_id}")
-        print(f"深度思考模式: {deep_thinking}")
+        print(f"最终发送给LLM的消息数量: {len(messages)}")
         
         # 更新当前聊天的模型设置
         chat_model_settings[str(history_id)] = deep_thinking
@@ -270,6 +435,10 @@ def send_message(message, history_id, deep_thinking=False):
         else:
             model = "mixtral-8x7b-32768"
             max_tokens = 8192  # mixtral模型的安全值，确保小于8192
+        
+        print(f"\n=== 调用LLM API ===")
+        print(f"使用模型: {model}")
+        print(f"最大令牌数: {max_tokens}")
         
         # 使用 Groq API 发送请求
         response = client.chat.completions.create(
@@ -283,10 +452,24 @@ def send_message(message, history_id, deep_thinking=False):
         assistant_message = response.choices[0].message.content
         
         # 添加打印系统回复
-        print("\n=== 系统回复 ===")
-        print(f"使用模型: {model}")
-        print(f"系统回复: {assistant_message}")
-        print("================\n")
+        print(f"\n=== LLM回复 ===")
+        print(f"回复长度: {len(assistant_message)} 字符")
+        print(f"回复摘要: {assistant_message[:100]}...")
+        
+        # 检查回复中是否包含引用
+        if web_search and search_results:
+            # 检查是否正确引用了搜索结果
+            reference_pattern = r'\[\d+\]'
+            references = re.findall(reference_pattern, assistant_message)
+            print(f"检测到的引用数量: {len(references)}")
+            
+            # 检查是否包含参考链接部分
+            if "参考链接" in assistant_message or "参考资料" in assistant_message:
+                print(f"回复中包含参考链接部分")
+            else:
+                print(f"警告: 回复中可能缺少参考链接部分")
+        
+        print("=========================")
 
         # 保存对话到数据库
         conn = get_db_connection()
@@ -302,11 +485,18 @@ def send_message(message, history_id, deep_thinking=False):
         c.execute('UPDATE chat_history SET content = ? WHERE id = ?', (json.dumps(content), history_id))
         conn.commit()
         conn.close()
+        print(f"对话已保存到数据库")
+        print(f"=== 消息处理完成 ===\n")
 
         return assistant_message
 
     except Exception as e:
-        print(f"Error in send_message: {str(e)}")
+        print(f"\n=== 处理消息时出错 ===")
+        print(f"错误类型: {type(e).__name__}")
+        print(f"错误信息: {str(e)}")
+        import traceback
+        print(f"错误堆栈:\n{traceback.format_exc()}")
+        print("=========================\n")
         raise
 
 @app.route('/send_message', methods=['POST'])
@@ -316,11 +506,12 @@ def handle_message():
         message = data.get('message')
         history_id = data.get('history_id')
         deep_thinking = data.get('deep_thinking', False)  # 获取深度思考模式参数
+        web_search = data.get('web_search', False)  # 获取网络搜索模式参数
         
         if not message:
             return jsonify({'error': '消息不能为空'}), 400
             
-        response = send_message(message, history_id, deep_thinking)
+        response = send_message(message, history_id, deep_thinking, web_search)
         return jsonify({'response': response})
         
     except Exception as e:
