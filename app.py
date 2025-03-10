@@ -210,18 +210,39 @@ def send_message():
     # 删除此函数，因为已经有 handle_message 处理消息
     pass
 
-def limit_context(messages, max_tokens=2000):
-    """限制上下文长度"""
+def limit_context(messages, max_tokens=8192):  # 降低默认tokens数
+    """限制上下文长度，避免超过API限制"""
+    if not messages:
+        return []
+        
     total_tokens = 0
     limited_messages = []
     
-    for msg in reversed(messages):
-        estimated_tokens = len(msg['content']) // 4  # 粗略估计token数
-        if total_tokens + estimated_tokens > max_tokens:
+    # 确保系统消息优先保留
+    system_messages = [msg for msg in messages if msg['role'] == 'system']
+    regular_messages = [msg for msg in messages if msg['role'] != 'system']
+    
+    # 估算系统消息的token数
+    system_tokens = 0
+    for msg in system_messages:
+        estimated_tokens = len(msg['content']) // 3  # 粗略估计token数
+        system_tokens += estimated_tokens
+    
+    # 保留最近的消息
+    remaining_tokens = max_tokens - system_tokens
+    
+    for msg in reversed(regular_messages):
+        estimated_tokens = len(msg['content']) // 3  # 更保守的token估计
+        if total_tokens + estimated_tokens > remaining_tokens:
             break
         limited_messages.insert(0, msg)
         total_tokens += estimated_tokens
     
+    # 添加回系统消息
+    for msg in system_messages:
+        limited_messages.insert(0, msg)
+    
+    print(f"原始消息数: {len(messages)}, 限制后消息数: {len(limited_messages)}, 估计token数: {total_tokens + system_tokens}")
     return limited_messages
 
 def generate_title(first_message):
@@ -343,7 +364,7 @@ def brave_web_search(query, count=5):
         print("=========================\n")
         return []
 
-# 格式化搜索结果为LLM可用的格式
+# 修改格式化搜索结果函数，添加target="_blank"
 def format_search_results(results):
     """将搜索结果格式化为LLM可用的文本格式"""
     if not results:
@@ -353,7 +374,8 @@ def format_search_results(results):
     
     for result in results:
         formatted_text += f"[{result['position']}] {result['title']}\n"
-        formatted_text += f"URL: {result['url']}\n"
+        # 添加target="_blank"属性，确保在新标签页打开链接
+        formatted_text += f"URL: <a href=\"{result['url']}\" target=\"_blank\">{result['url']}</a>\n"
         formatted_text += f"描述: {result['description']}\n\n"
     
     print(f"\n=== 格式化的搜索结果 ===")
@@ -384,11 +406,17 @@ def send_message(message, history_id, deep_thinking=False, web_search=False):
         content = json.loads(chat['content'])
         print(f"历史消息数量: {len(content)}")
         
-        # 准备消息列表，删除系统提示
+        # 准备消息列表
         messages = []
-        # 添加历史消息
-        messages.extend(limit_context([{"role": msg["role"], "content": msg["content"]} for msg in content]))
-        print(f"上下文限制后的消息数量: {len(messages)}")
+        
+        # 根据是否开启了网络搜索来决定是否携带历史上下文
+        if not web_search:
+            # 未开启网络搜索时，携带历史上下文
+            messages.extend(limit_context([{"role": msg["role"], "content": msg["content"]} for msg in content]))
+            print(f"上下文限制后的消息数量: {len(messages)}")
+        else:
+            # 开启网络搜索时，不携带历史上下文，只处理当前用户消息
+            print(f"网络搜索模式已开启，不携带历史上下文")
         
         # 如果开启了网络搜索，先进行搜索
         search_results = None
@@ -401,7 +429,7 @@ def send_message(message, history_id, deep_thinking=False, web_search=False):
                 formatted_results = format_search_results(search_results)
                 
                 # 为大语言模型添加系统提示，指导如何引用搜索结果
-                system_prompt = "用户开启了联网搜索功能，你将收到相关的搜索结果。请结合这些结果回答用户的问题。回答中需要引用相关内容的出处，按照以下格式引用:[数字] 文本内容，其中数字是搜索结果的编号。确保引用是相关的，并尽可能保持原文的准确性。在回答结束时，列出相关参考链接，格式为 '[数字] URL'。"
+                system_prompt = "用户开启了联网搜索功能，你将收到相关的搜索结果。请结合这些结果回答用户的问题。回答中需要引用相关内容的出处，按照以下格式引用:[数字] 文本内容，其中数字是搜索结果的编号。确保引用是相关的，并尽可能保持原文的准确性。在回答结束时，列出相关参考链接，格式为 '[数字] URL'。所有链接都应该在新标签页中打开。"
                 print(f"添加系统提示: {system_prompt}")
                 messages.insert(0, {
                     "role": "system", 
@@ -420,7 +448,7 @@ def send_message(message, history_id, deep_thinking=False, web_search=False):
                     "content": "用户开启了联网搜索功能，但搜索未返回任何结果。请告知用户搜索未成功，并尽可能根据你的知识回答问题，同时说明信息可能不是最新的。"
                 })
                 print(f"添加搜索失败提示后的消息数量: {len(messages)}")
-        
+
         # 添加新消息
         messages.append({"role": "user", "content": message})
         print(f"最终发送给LLM的消息数量: {len(messages)}")

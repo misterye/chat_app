@@ -972,10 +972,38 @@
             function toggleWebSearch(btn) {
                 webSearchMode = !webSearchMode;
                 if (webSearchMode) {
+                    // 开启网络搜索模式时提示用户
+                    const chatWindow = document.getElementById('chat-window');
+                    const systemMessageDiv = document.createElement('div');
+                    systemMessageDiv.className = 'message assistant-message';
+                    systemMessageDiv.innerHTML = `
+                        <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                        <div class="message-content">
+                            <i class="fas fa-info-circle text-primary"></i> 
+                            网络搜索已开启。请注意：此模式下我将只回答您当前搜索的问题，不会记住之前的对话内容。
+                        </div>
+                    `;
+                    chatWindow.appendChild(systemMessageDiv);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    
                     btn.style.backgroundColor = '#ffffff';
                     btn.style.color = '#4a6cf7';
                     btn.style.border = '1px solid #4a6cf7';
                 } else {
+                    // 关闭网络搜索模式时也提示用户
+                    const chatWindow = document.getElementById('chat-window');
+                    const systemMessageDiv = document.createElement('div');
+                    systemMessageDiv.className = 'message assistant-message';
+                    systemMessageDiv.innerHTML = `
+                        <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                        <div class="message-content">
+                            <i class="fas fa-info-circle text-primary"></i> 
+                            网络搜索已关闭。我将恢复记忆对话历史的能力。
+                        </div>
+                    `;
+                    chatWindow.appendChild(systemMessageDiv);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    
                     btn.style.backgroundColor = '';
                     btn.style.color = '';
                     btn.style.border = '';
@@ -1035,7 +1063,7 @@
                 }
             });
             
-            // 添加网络搜索桌面端按钮点击事件
+            // 修改网络搜索桌面端按钮点击事件
             webSearchBtnDesktop.addEventListener('click', function() {
                 toggleWebSearch(webSearchBtnDesktop);
                 // 同步移动端按钮状态
@@ -1182,6 +1210,10 @@
             });
             processedContent = processedContent.replace(/`([^`]+)`/g, (match, code) => `<code class="inline-code">${code}</code>`);
             let formattedContent = marked.parse(processedContent);
+            
+            // 确保所有链接在新标签页中打开
+            formattedContent = formattedContent.replace(/<a\s+href="([^"]+)"(?!\s+target="_blank")/g, '<a href="$1" target="_blank"');
+            
             const doc = parser.parseFromString(formattedContent, 'text/html');
             return doc.body.innerHTML;
         }
