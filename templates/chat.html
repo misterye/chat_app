@@ -572,7 +572,7 @@
                 <div class="input-group d-none d-md-flex">
                     <textarea id="message-input-desktop" class="form-control" placeholder="给小智发送消息" rows="2"></textarea>
                     <div class="input-actions">
-                        <button class="input-action-btn" title="深度思考">
+                        <button class="input-action-btn" id="think-btn" title="深度思考">
                             <i class="fas fa-brain"></i>
                         </button>
                         <button class="input-action-btn" title="联网搜索">
@@ -594,7 +594,7 @@
                     </div>
                     <textarea id="message-input-mobile" class="form-control" placeholder="给小智发送消息" rows="2"></textarea>
                     <div class="input-actions">
-                        <button class="input-action-btn" title="深度思考">
+                        <button class="input-action-btn" id="think-btn-mobile" title="深度思考">
                             <i class="fas fa-brain"></i>
                         </button>
                         <button class="input-action-btn" title="联网搜索">
@@ -654,6 +654,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script>
         let currentChatId = null;
+        let deepThinkingMode = false; // 添加深度思考模式状态变量
 
         function loadHistory() {
             fetch('/chat/history')
@@ -752,6 +753,10 @@
                     currentChatId = data.chat_id;
                     loadHistory();
                     document.getElementById('chat-window').innerHTML = '';
+                    
+                    // 重置深度思考模式状态
+                    deepThinkingMode = false;
+                    resetThinkButtonStyle();
                 });
         }
 
@@ -770,6 +775,10 @@
                     });
                     chatWindow.scrollTop = chatWindow.scrollHeight;
                     applyHighlighting();
+                    
+                    // 重置深度思考模式状态
+                    deepThinkingMode = false;
+                    resetThinkButtonStyle();
                 });
         }
 
@@ -847,7 +856,11 @@
             fetch('/send_message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ message: message, history_id: currentChatId })
+                body: JSON.stringify({ 
+                    message: message, 
+                    history_id: currentChatId,
+                    deep_thinking: deepThinkingMode // 添加深度思考模式标志
+                })
             })
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -923,6 +936,73 @@
                     sendMessageMobile();
                 }
             });
+            
+            // 添加深度思考按钮点击事件
+            const thinkBtnDesktop = document.getElementById('think-btn');
+            const thinkBtnMobile = document.getElementById('think-btn-mobile');
+            
+            function toggleDeepThinking(btn) {
+                deepThinkingMode = !deepThinkingMode;
+                if (deepThinkingMode) {
+                    btn.style.backgroundColor = '#ffffff';
+                    btn.style.color = '#4a6cf7';
+                    btn.style.border = '1px solid #4a6cf7';
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.style.border = '';
+                }
+            }
+            
+            // 添加重置按钮样式的函数
+            function resetThinkButtonStyle() {
+                // 重置桌面端按钮
+                thinkBtnDesktop.style.backgroundColor = '';
+                thinkBtnDesktop.style.color = '';
+                thinkBtnDesktop.style.border = '';
+                
+                // 重置移动端按钮
+                if (thinkBtnMobile) {
+                    thinkBtnMobile.style.backgroundColor = '';
+                    thinkBtnMobile.style.color = '';
+                    thinkBtnMobile.style.border = '';
+                }
+            }
+            
+            // 添加到全局作用域以便在其他函数中调用
+            window.resetThinkButtonStyle = resetThinkButtonStyle;
+            
+            thinkBtnDesktop.addEventListener('click', function() {
+                toggleDeepThinking(thinkBtnDesktop);
+                // 同步移动端按钮状态
+                if (thinkBtnMobile) {
+                    if (deepThinkingMode) {
+                        thinkBtnMobile.style.backgroundColor = '#ffffff';
+                        thinkBtnMobile.style.color = '#4a6cf7';
+                        thinkBtnMobile.style.border = '1px solid #4a6cf7';
+                    } else {
+                        thinkBtnMobile.style.backgroundColor = '';
+                        thinkBtnMobile.style.color = '';
+                        thinkBtnMobile.style.border = '';
+                    }
+                }
+            });
+            
+            if (thinkBtnMobile) {
+                thinkBtnMobile.addEventListener('click', function() {
+                    toggleDeepThinking(thinkBtnMobile);
+                    // 同步桌面端按钮状态
+                    if (deepThinkingMode) {
+                        thinkBtnDesktop.style.backgroundColor = '#ffffff';
+                        thinkBtnDesktop.style.color = '#4a6cf7';
+                        thinkBtnDesktop.style.border = '1px solid #4a6cf7';
+                    } else {
+                        thinkBtnDesktop.style.backgroundColor = '';
+                        thinkBtnDesktop.style.color = '';
+                        thinkBtnDesktop.style.border = '';
+                    }
+                });
+            }
             
             loadHistory();
             initializeClipboard();

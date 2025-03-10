@@ -178,6 +178,11 @@ def manage_chat(chat_id):
         content = c.fetchone()[0]
         messages = json.loads(content) if content else []
         conn.close()
+        
+        # 重置深度思考模式，加载聊天时回到默认状态
+        if str(chat_id) in chat_model_settings:
+            del chat_model_settings[str(chat_id)]
+            
         return jsonify(messages)
     
     elif request.method == 'PUT':
@@ -226,7 +231,10 @@ client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-def send_message(message, history_id):
+# 保存每个聊天对话的模型设置
+chat_model_settings = {}
+
+def send_message(message, history_id, deep_thinking=False):
     try:
         # 从数据库获取历史消息
         conn = get_db_connection()
@@ -250,13 +258,25 @@ def send_message(message, history_id):
         print("\n=== 用户输入 ===")
         print(f"用户消息: {message}")
         print(f"历史记录ID: {history_id}")
+        print(f"深度思考模式: {deep_thinking}")
+        
+        # 更新当前聊天的模型设置
+        chat_model_settings[str(history_id)] = deep_thinking
+        
+        # 根据深度思考模式选择不同的模型和适当的max_tokens
+        if deep_thinking:
+            model = "deepseek-r1-distill-llama-70b"
+            max_tokens = 8192  # r1模型的安全值
+        else:
+            model = "mixtral-8x7b-32768"
+            max_tokens = 8192  # mixtral模型的安全值，确保小于8192
         
         # 使用 Groq API 发送请求
         response = client.chat.completions.create(
-            model="deepseek-r1-distill-llama-70b",  # 或其他支持的模型
+            model=model,  # 根据模式选择模型
             messages=messages,
             temperature=0.6,
-            max_tokens=32768
+            max_tokens=max_tokens  # 使用根据模型设置的安全值
         )
 
         # 获取回复内容
@@ -264,6 +284,7 @@ def send_message(message, history_id):
         
         # 添加打印系统回复
         print("\n=== 系统回复 ===")
+        print(f"使用模型: {model}")
         print(f"系统回复: {assistant_message}")
         print("================\n")
 
@@ -294,11 +315,12 @@ def handle_message():
         data = request.get_json()
         message = data.get('message')
         history_id = data.get('history_id')
+        deep_thinking = data.get('deep_thinking', False)  # 获取深度思考模式参数
         
         if not message:
             return jsonify({'error': '消息不能为空'}), 400
             
-        response = send_message(message, history_id)
+        response = send_message(message, history_id, deep_thinking)
         return jsonify({'response': response})
         
     except Exception as e:
