@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聊天 - 小智</title>
+    <title>聊天 - 小斯</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -103,6 +103,13 @@
         .user-message .message-content {
             background-color: #f1f3f5;
             color: #212529;
+            line-height: 1.5;
+        }
+        .user-message .message-content p {
+            margin-bottom: 0.5rem;
+        }
+        .user-message .message-content p:last-child {
+            margin-bottom: 0;
         }
         .assistant-message .message-content {
             background-color: #ffffff;
@@ -515,7 +522,7 @@
     <nav class="navbar navbar-expand navbar-light bg-white fixed-top">
         <div class="container-fluid">
             <span class="navbar-text">
-                <i class="fas fa-robot me-2"></i> <span class="d-none d-md-inline">小智欢迎您：</span><span id="username">{{ current_user.username }}</span>
+                <i class="fas fa-robot me-2"></i> <span class="d-none d-md-inline">小斯欢迎您：</span><span id="username">{{ current_user.username }}</span>
             </span>
             <div class="admin-controls ms-auto">
                 {% if current_user.is_admin %}
@@ -537,7 +544,7 @@
     <div class="chat-container">
         <div class="history-sidebar">
             <div class="app-header">
-                申斯小智
+                申斯小斯
             </div>
             <button class="new-chat-btn" onclick="createNewChat()">
                 <i class="fas fa-plus"></i> 开启新对话
@@ -559,8 +566,8 @@
                             <path d="M15.9999 5.33325C10.1091 5.33325 5.33325 10.1091 5.33325 15.9999C5.33325 21.8908 10.1091 26.6666 15.9999 26.6666C21.8908 26.6666 26.6666 21.8908 26.6666 15.9999C26.6666 10.1091 21.8908 5.33325 15.9999 5.33325ZM13.9999 20.6666C13.9999 21.2189 13.5522 21.6666 12.9999 21.6666C12.4477 21.6666 11.9999 21.2189 11.9999 20.6666V11.3333C11.9999 10.781 12.4477 10.3333 12.9999 10.3333C13.5522 10.3333 13.9999 10.781 13.9999 11.3333V20.6666ZM19.9999 20.6666C19.9999 21.2189 19.5522 21.6666 18.9999 21.6666C18.4477 21.6666 17.9999 21.2189 17.9999 20.6666V11.3333C17.9999 10.781 18.4477 10.3333 18.9999 10.3333C19.5522 10.3333 19.9999 10.781 19.9999 11.3333V20.6666Z" fill="white"/>
                         </svg>
                     </div>
-                    <h2>我是申斯小智, 很高兴见到你!</h2>
-                    <p>我可以帮你写代码、写作各种创意内容，请把你的任务交给我吧~</p>
+                    <h2>我是申斯小斯, 很高兴见到你!</h2>
+                    <p>我可以帮你写代码、写作各种创意内容、上网查资料，请把你的任务交给我吧~</p>
                 </div>
             </div>
             <div class="loading-indicator text-center p-3 d-none" id="loading-indicator">
@@ -570,7 +577,7 @@
             <div style="height: 35px;"></div> <!-- 为消息框下端留出空间 -->
             <div class="input-container">
                 <div class="input-group d-none d-md-flex">
-                    <textarea id="message-input-desktop" class="form-control" placeholder="给小智发送消息" rows="2"></textarea>
+                    <textarea id="message-input-desktop" class="form-control" placeholder="给小斯发送消息" rows="2"></textarea>
                     <div class="input-actions">
                         <button class="input-action-btn" id="think-btn" title="深度思考">
                             <i class="fas fa-brain"></i>
@@ -578,8 +585,11 @@
                         <button class="input-action-btn" title="联网搜索">
                             <i class="fas fa-globe"></i>
                         </button>
-                        <button class="input-action-btn" title="上传文件">
+                        <button class="input-action-btn" title="上传文件" onclick="showFileUploadModal()">
                             <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="input-action-btn" id="doc-search-btn" title="文档检索">
+                            <i class="fas fa-book"></i>
                         </button>
                         <button class="send-btn" onclick="sendMessageDesktop()" title="发送">
                             <i class="fas fa-paper-plane"></i>
@@ -592,13 +602,19 @@
                             <i class="fas fa-bars"></i>
                         </button>
                     </div>
-                    <textarea id="message-input-mobile" class="form-control" placeholder="给小智发送消息" rows="2"></textarea>
+                    <textarea id="message-input-mobile" class="form-control" placeholder="给小斯发送消息" rows="2"></textarea>
                     <div class="input-actions">
                         <button class="input-action-btn" id="think-btn-mobile" title="深度思考">
                             <i class="fas fa-brain"></i>
                         </button>
                         <button class="input-action-btn" title="联网搜索">
                             <i class="fas fa-globe"></i>
+                        </button>
+                        <button class="input-action-btn" title="上传文件" onclick="showFileUploadModal()">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="input-action-btn" id="doc-search-btn-mobile" title="文档检索">
+                            <i class="fas fa-book"></i>
                         </button>
                         <button class="send-btn" onclick="sendMessageMobile()" title="发送">
                             <i class="fas fa-paper-plane"></i>
@@ -648,6 +664,73 @@
         </div>
     </div>
 
+    <!-- 添加文件上传对话框 -->
+    <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-upload"></i> 上传文档</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="fileUploadForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="documentFile" class="form-label">选择要上传的文本文件 (*.txt)</label>
+                            <input class="form-control" type="file" id="documentFile" name="file" accept=".txt">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">文档分段设置</label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <div>
+                                    <label for="chunkSize" class="form-label small">分段大小</label>
+                                    <input type="number" class="form-control" id="chunkSize" name="chunk_size" value="400" min="100" max="500">
+                                    <small class="form-text text-muted">建议值: 300-450</small>
+                                </div>
+                                <div>
+                                    <label for="overlap" class="form-label small">重叠大小</label>
+                                    <input type="number" class="form-control" id="overlap" name="overlap" value="50" min="0" max="100">
+                                    <small class="form-text text-muted">建议值: 30-80</small>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">由于API限制，每个分段的字符数需要控制在500内。如果文档过大会自动截断处理。</small>
+                        </div>
+                        <div id="uploadProgress" class="progress d-none mb-3">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div id="uploadStatus" class="alert d-none mb-3"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadDocument()">上传文档</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户文档列表对话框 -->
+    <div class="modal fade" id="userDocumentsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-book"></i> 我的文档</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="documentsList">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="showFileUploadModal()">上传新文档</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -656,6 +739,7 @@
         let currentChatId = null;
         let deepThinkingMode = false; // 添加深度思考模式状态变量
         let webSearchMode = false; // 添加网络搜索模式状态变量
+        let documentSearchMode = false; // 添加文档检索模式状态变量
 
         function loadHistory() {
             fetch('/chat/history')
@@ -762,6 +846,10 @@
                     // 重置网络搜索模式状态
                     webSearchMode = false;
                     resetWebSearchButtonStyle();
+                    
+                    // 重置文档检索模式状态
+                    documentSearchMode = false;
+                    resetDocSearchButtonStyle();
                 });
         }
 
@@ -843,7 +931,6 @@
                 userMessageDiv.innerHTML = `
                     <img src="/static/user-avatar.png" alt="user" class="avatar">
                     <div class="message-content">
-                        <button class="copy-btn copy-all" data-clipboard-text="${escapedMessage}"><i class="far fa-copy"></i></button>
                         ${formattedUserMessage}
                     </div>
                 `;
@@ -868,8 +955,9 @@
                 body: JSON.stringify({ 
                     message: message, 
                     history_id: currentChatId,
-                    deep_thinking: deepThinkingMode, // 添加深度思考模式标志
-                    web_search: webSearchMode // 添加网络搜索模式标志
+                    deep_thinking: deepThinkingMode,
+                    web_search: webSearchMode,
+                    doc_search: documentSearchMode
                 })
             })
             .then(response => {
@@ -1067,16 +1155,10 @@
             webSearchBtnDesktop.addEventListener('click', function() {
                 toggleWebSearch(webSearchBtnDesktop);
                 // 同步移动端按钮状态
-                if (webSearchBtnMobile) {
-                    if (webSearchMode) {
-                        webSearchBtnMobile.style.backgroundColor = '#ffffff';
-                        webSearchBtnMobile.style.color = '#4a6cf7';
-                        webSearchBtnMobile.style.border = '1px solid #4a6cf7';
-                    } else {
-                        webSearchBtnMobile.style.backgroundColor = '';
-                        webSearchBtnMobile.style.color = '';
-                        webSearchBtnMobile.style.border = '';
-                    }
+                if (webSearchMode) {
+                    webSearchBtnMobile.style.backgroundColor = '#ffffff';
+                    webSearchBtnMobile.style.color = '#4a6cf7';
+                    webSearchBtnMobile.style.border = '1px solid #4a6cf7';
                 }
             });
             
@@ -1152,6 +1234,17 @@
                 <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
                 <div class="message-content">
             `;
+            
+            // 如果是用户消息，不添加复制按钮
+            if (role === 'assistant') {
+                // 添加复制按钮只对AI助手的回复
+                messageHTML = `
+                    <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
+                    <div class="message-content">
+                    <button class="copy-btn copy-all" data-clipboard-text="${content.replace(/<[^>]*>/g, '')}"><i class="far fa-copy"></i></button>
+                `;
+            }
+            
             const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
             if (thinkMatch && role === 'assistant') {
                 const thinkContent = thinkMatch[1].trim();
@@ -1209,10 +1302,15 @@
                 return `\n<pre data-language="${language || 'plaintext'}"><code class="hljs language-${language || 'plaintext'}">${highlightedCode}</code></pre>\n`;
             });
             processedContent = processedContent.replace(/`([^`]+)`/g, (match, code) => `<code class="inline-code">${code}</code>`);
+            
+            // 改进标记处理，移除多余的段落和空行
             let formattedContent = marked.parse(processedContent);
             
             // 确保所有链接在新标签页中打开
             formattedContent = formattedContent.replace(/<a\s+href="([^"]+)"(?!\s+target="_blank")/g, '<a href="$1" target="_blank"');
+            
+            // 移除多余的空段落
+            formattedContent = formattedContent.replace(/<p>\s*<\/p>/g, '');
             
             const doc = parser.parseFromString(formattedContent, 'text/html');
             return doc.body.innerHTML;
@@ -1223,6 +1321,306 @@
                 hljs.highlightElement(block);
             });
         }
+
+        // 显示文件上传对话框
+        function showFileUploadModal() {
+            // 重置表单
+            document.getElementById('fileUploadForm').reset();
+            document.getElementById('uploadProgress').classList.add('d-none');
+            document.getElementById('uploadStatus').classList.add('d-none');
+            
+            // 显示对话框
+            const modal = new bootstrap.Modal(document.getElementById('fileUploadModal'));
+            modal.show();
+        }
+        
+        // 上传文档
+        function uploadDocument() {
+            const fileInput = document.getElementById('documentFile');
+            const formData = new FormData(document.getElementById('fileUploadForm'));
+            
+            // 检查是否选择了文件
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showUploadStatus('请选择要上传的文件', 'danger');
+                return;
+            }
+            
+            // 检查文件类型
+            const file = fileInput.files[0];
+            if (!file.name.endsWith('.txt')) {
+                showUploadStatus('目前只支持上传txt格式文件', 'danger');
+                return;
+            }
+            
+            // 检查分段设置
+            const chunkSize = parseInt(document.getElementById('chunkSize').value);
+            const overlap = parseInt(document.getElementById('overlap').value);
+            
+            if (chunkSize > 500) {
+                showUploadStatus('分段大小超过限制（最大500），已自动调整为400', 'warning');
+                document.getElementById('chunkSize').value = 400;
+                formData.set('chunk_size', 400);
+            }
+            
+            if (overlap > 100) {
+                showUploadStatus('重叠大小超过建议值（最大100），已自动调整为50', 'warning');
+                document.getElementById('overlap').value = 50;
+                formData.set('overlap', 50);
+            }
+            
+            // 显示进度条
+            const progressBar = document.querySelector('#uploadProgress .progress-bar');
+            document.getElementById('uploadProgress').classList.remove('d-none');
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            
+            // 显示初始状态
+            showUploadStatus('开始处理文档，较大文件可能需要更长时间...', 'info');
+            
+            // 上传文件
+            fetch('/api/upload_document', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+                
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || '上传失败');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showUploadStatus(`文档 "${data.filename}" 上传成功！已分割为 ${data.chunks} 个文本块`, 'success');
+                
+                // 添加系统消息通知用户上传成功
+                const chatWindow = document.getElementById('chat-window');
+                const systemMessageDiv = document.createElement('div');
+                systemMessageDiv.className = 'message assistant-message';
+                systemMessageDiv.innerHTML = `
+                    <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                    <div class="message-content">
+                        <i class="fas fa-check-circle text-success"></i> 
+                        文档 "${data.filename}" 上传成功！您现在可以通过文档检索功能与文档内容进行交互。
+                        文档已被分割为 ${data.chunks} 个片段，每个片段约 ${document.getElementById('chunkSize').value} 字符。
+                    </div>
+                `;
+                chatWindow.appendChild(systemMessageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+                // 更新文档列表
+                loadUserDocuments();
+                
+                // 2秒后关闭对话框
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('fileUploadModal'));
+                    if (modal) modal.hide();
+                }, 2000);
+            })
+            .catch(error => {
+                showUploadStatus(`上传失败: ${error.message}。如果文档过大，请尝试减小分段大小。`, 'danger');
+            });
+        }
+        
+        // 显示上传状态
+        function showUploadStatus(message, type) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `alert alert-${type} mb-3`;
+            statusDiv.classList.remove('d-none');
+        }
+        
+        // 加载用户文档列表
+        function loadUserDocuments() {
+            fetch('/api/user_documents')
+                .then(response => response.json())
+                .then(documents => {
+                    const docsList = document.getElementById('documentsList');
+                    
+                    if (!documents || documents.length === 0) {
+                        docsList.innerHTML = `
+                            <div class="alert alert-info">
+                                您还没有上传任何文档。点击下方"上传新文档"按钮开始上传。
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    let html = `<div class="list-group">`;
+                    documents.forEach(doc => {
+                        const date = new Date(doc.created_at).toLocaleString();
+                        html += `
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">${doc.filename}</h6>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock"></i> ${date}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">${doc.count}块</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                    
+                    docsList.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('加载文档列表失败:', error);
+                    document.getElementById('documentsList').innerHTML = `
+                        <div class="alert alert-danger">
+                            加载文档列表失败: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+        
+        // 显示用户文档列表对话框
+        function showUserDocumentsModal() {
+            loadUserDocuments();
+            const modal = new bootstrap.Modal(document.getElementById('userDocumentsModal'));
+            modal.show();
+        }
+        
+        // 切换文档检索模式
+        function toggleDocumentSearch(btn) {
+            documentSearchMode = !documentSearchMode;
+            
+            if (documentSearchMode) {
+                // 开启文档检索模式
+                const chatWindow = document.getElementById('chat-window');
+                const systemMessageDiv = document.createElement('div');
+                systemMessageDiv.className = 'message assistant-message';
+                systemMessageDiv.innerHTML = `
+                    <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                    <div class="message-content">
+                        <i class="fas fa-info-circle text-primary"></i> 
+                        文档检索模式已开启。我将尝试从您上传的文档中查找相关信息来回答您的问题。
+                    </div>
+                `;
+                chatWindow.appendChild(systemMessageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+                // 加载用户文档
+                fetch('/api/user_documents')
+                    .then(response => response.json())
+                    .then(documents => {
+                        if (!documents || documents.length === 0) {
+                            // 如果没有文档，添加提示并显示上传对话框
+                            const noDocMsg = document.createElement('div');
+                            noDocMsg.className = 'message assistant-message';
+                            noDocMsg.innerHTML = `
+                                <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                                <div class="message-content">
+                                    <i class="fas fa-exclamation-circle text-warning"></i> 
+                                    您尚未上传任何文档。请先上传文档以使用文档检索功能。
+                                </div>
+                            `;
+                            chatWindow.appendChild(noDocMsg);
+                            chatWindow.scrollTop = chatWindow.scrollHeight;
+                            
+                            // 显示上传对话框
+                            setTimeout(() => {
+                                showFileUploadModal();
+                            }, 1000);
+                            
+                            // 重置文档检索模式
+                            documentSearchMode = false;
+                            resetDocSearchButtonStyle();
+                            return;
+                        }
+                        
+                        // 更改按钮样式
+                        btn.style.backgroundColor = '#ffffff';
+                        btn.style.color = '#4a6cf7';
+                        btn.style.border = '1px solid #4a6cf7';
+                    });
+            } else {
+                // 关闭文档检索模式
+                const chatWindow = document.getElementById('chat-window');
+                const systemMessageDiv = document.createElement('div');
+                systemMessageDiv.className = 'message assistant-message';
+                systemMessageDiv.innerHTML = `
+                    <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                    <div class="message-content">
+                        <i class="fas fa-info-circle text-primary"></i> 
+                        文档检索模式已关闭。我将不再特别从您的文档中查找信息。
+                    </div>
+                `;
+                chatWindow.appendChild(systemMessageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+                // 重置按钮样式
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+                btn.style.border = '';
+            }
+        }
+        
+        // 重置文档检索按钮样式
+        function resetDocSearchButtonStyle() {
+            const docSearchBtnDesktop = document.getElementById('doc-search-btn');
+            const docSearchBtnMobile = document.getElementById('doc-search-btn-mobile');
+            
+            docSearchBtnDesktop.style.backgroundColor = '';
+            docSearchBtnDesktop.style.color = '';
+            docSearchBtnDesktop.style.border = '';
+            
+            if (docSearchBtnMobile) {
+                docSearchBtnMobile.style.backgroundColor = '';
+                docSearchBtnMobile.style.color = '';
+                docSearchBtnMobile.style.border = '';
+            }
+            
+            documentSearchMode = false;
+        }
+        
+        // 在文档加载完成后初始化按钮事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 文档检索按钮点击事件
+            const docSearchBtnDesktop = document.getElementById('doc-search-btn');
+            const docSearchBtnMobile = document.getElementById('doc-search-btn-mobile');
+            
+            docSearchBtnDesktop.addEventListener('click', function() {
+                toggleDocumentSearch(docSearchBtnDesktop);
+                // 同步移动端按钮状态
+                if (docSearchBtnMobile) {
+                    if (documentSearchMode) {
+                        docSearchBtnMobile.style.backgroundColor = '#ffffff';
+                        docSearchBtnMobile.style.color = '#4a6cf7';
+                        docSearchBtnMobile.style.border = '1px solid #4a6cf7';
+                    } else {
+                        docSearchBtnMobile.style.backgroundColor = '';
+                        docSearchBtnMobile.style.color = '';
+                        docSearchBtnMobile.style.border = '';
+                    }
+                }
+            });
+            
+            if (docSearchBtnMobile) {
+                docSearchBtnMobile.addEventListener('click', function() {
+                    toggleDocumentSearch(docSearchBtnMobile);
+                    // 同步桌面端按钮状态
+                    if (documentSearchMode) {
+                        docSearchBtnDesktop.style.backgroundColor = '#ffffff';
+                        docSearchBtnDesktop.style.color = '#4a6cf7';
+                        docSearchBtnDesktop.style.border = '1px solid #4a6cf7';
+                    } else {
+                        docSearchBtnDesktop.style.backgroundColor = '';
+                        docSearchBtnDesktop.style.color = '';
+                        docSearchBtnDesktop.style.border = '';
+                    }
+                });
+            }
+            
+            // 添加全局函数
+            window.resetDocSearchButtonStyle = resetDocSearchButtonStyle;
+        });
     </script>
 </body>
 </html>

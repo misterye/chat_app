@@ -9,6 +9,12 @@ import os
 from openai import OpenAI
 import requests  # 添加requests库用于调用Brave API
 import re
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+import pickle
+import uuid
+from werkzeug.utils import secure_filename
 
 # 加载环境变量
 load_dotenv()
@@ -18,6 +24,9 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY')  # 从环境变量获取
 
 # 添加Brave Search API密钥
 BRAVE_API_KEY = os.environ.get('BRAVE_API_KEY')
+
+# 添加 siliconflow 的 API 密钥
+SILICONFLOW_API_KEY = os.environ.get('SILICONFLOW_API_KEY')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -283,7 +292,7 @@ def brave_web_search(query, count=5):
             return []
         
         # url = "https://api.search.brave.com/res/v1/web/search"
-        url = "https://api.satelc.us.kg/res/v1/web/search"
+        url = "https://brave.binchat.top/res/v1/web/search"
         headers = {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
@@ -385,13 +394,14 @@ def format_search_results(results):
     
     return formatted_text
 
-def send_message(message, history_id, deep_thinking=False, web_search=False):
+def send_message(message, history_id, deep_thinking=False, web_search=False, doc_search=False):
     try:
         print(f"\n=== 消息处理开始 ===")
         print(f"用户消息: {message}")
         print(f"历史记录ID: {history_id}")
         print(f"深度思考模式: {deep_thinking}")
         print(f"网络搜索模式: {web_search}")
+        print(f"文档检索模式: {doc_search}")
         
         # 从数据库获取历史消息
         conn = get_db_connection()
@@ -449,6 +459,94 @@ def send_message(message, history_id, deep_thinking=False, web_search=False):
                 })
                 print(f"添加搜索失败提示后的消息数量: {len(messages)}")
 
+        # 如果启用了文档检索
+        if doc_search:
+            print(f"\n=== 开始文档检索处理 ===")
+            
+            # 获取用户的所有文档集合
+            user_docs = session.get('user_docs', {})
+            if not user_docs:
+                # 如果session中没有，重新获取
+                collections = []
+                for item in os.listdir(VECTOR_DB_DIR):
+                    if item.startswith('doc_'):
+                        metadata_path = os.path.join(VECTOR_DB_DIR, item, 'metadata.pkl')
+                        if os.path.exists(metadata_path):
+                            with open(metadata_path, 'rb') as f:
+                                metadata = pickle.load(f)
+                                if metadata and len(metadata) > 0:
+                                    first_meta = metadata[0]
+                                    if first_meta.get('user_id') == current_user.id:
+                                        collections.append(item)
+                                        user_docs[item] = {
+                                            'filename': first_meta.get('filename', '未知文件')
+                                        }
+                
+                session['user_docs'] = user_docs
+            
+            if not user_docs:
+                # 添加没有文档的提示
+                messages.insert(0, {
+                    "role": "system", 
+                    "content": "用户请求检索文档，但当前没有上传任何文档。请告知用户需要先上传文档才能使用此功能。"
+                })
+            else:
+                # 对所有文档集合进行检索
+                all_results = []
+                for collection_name in user_docs.keys():
+                    try:
+                        # 加载向量数据库
+                        if collection_name not in vector_dbs:
+                            vector_dbs[collection_name] = VectorDB.load(collection_name)
+                            
+                        vector_db = vector_dbs[collection_name]
+                        
+                        # 获取查询的嵌入向量
+                        query_embedding = get_embeddings([message])
+                        if query_embedding:
+                            # 搜索相似文档
+                            results = vector_db.search(query_embedding[0], k=3)  # 每个集合返回前3个结果
+                            
+                            for result in results:
+                                result['collection'] = collection_name
+                                result['filename'] = user_docs[collection_name].get('filename', '未知文件')
+                                all_results.append(result)
+                    except Exception as e:
+                        print(f"检索文档 {collection_name} 时出错: {str(e)}")
+                
+                # 根据相似度得分排序所有结果
+                all_results.sort(key=lambda x: x['score'])
+                
+                # 取前5个最相关的结果
+                top_results = all_results[:5]
+                
+                if top_results:
+                    # 格式化检索结果
+                    formatted_results = "以下是来自您上传文档的相关内容:\n\n"
+                    
+                    for i, result in enumerate(top_results):
+                        formatted_results += f"[文档 {i+1}] {result['filename']}\n"
+                        formatted_results += f"内容: {result['text'][:300]}...\n\n"
+                    
+                    # 添加系统提示
+                    system_prompt = "用户已启用文档检索功能，下面是检索到的相关文档内容。请使用这些信息回答用户的问题，引用相关内容时请标注来自哪个文档。"
+                    messages.insert(0, {
+                        "role": "system", 
+                        "content": system_prompt
+                    })
+                    
+                    # 添加检索结果到上下文
+                    messages.append({
+                        "role": "system", 
+                        "content": f"检索结果：\n\n{formatted_results}"
+                    })
+                else:
+                    # 没有找到相关内容
+                    messages.insert(0, {
+                        "role": "system", 
+                        "content": "用户请求检索文档内容，但未找到与查询相关的内容。请告知用户未找到相关信息，并询问是否需要更改搜索词或上传更多相关文档。"
+                    })
+        
         # 添加新消息
         messages.append({"role": "user", "content": message})
         print(f"最终发送给LLM的消息数量: {len(messages)}")
@@ -535,11 +633,12 @@ def handle_message():
         history_id = data.get('history_id')
         deep_thinking = data.get('deep_thinking', False)  # 获取深度思考模式参数
         web_search = data.get('web_search', False)  # 获取网络搜索模式参数
+        doc_search = data.get('doc_search', False)  # 获取文档检索模式参数
         
         if not message:
             return jsonify({'error': '消息不能为空'}), 400
             
-        response = send_message(message, history_id, deep_thinking, web_search)
+        response = send_message(message, history_id, deep_thinking, web_search, doc_search)
         return jsonify({'response': response})
         
     except Exception as e:
@@ -631,6 +730,477 @@ def get_user_info(user_id):
         
     except Exception as e:
         print(f"Error getting user info: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# 创建向量存储目录
+VECTOR_DB_DIR = 'vector_db'
+if not os.path.exists(VECTOR_DB_DIR):
+    os.makedirs(VECTOR_DB_DIR)
+
+# 向量数据库相关配置
+class VectorDB:
+    def __init__(self, dimension=1024):  # 修改默认维度为1024，匹配BGE模型
+        self.dimension = dimension
+        self.index = faiss.IndexFlatL2(dimension)  # 使用L2距离的FAISS索引
+        self.texts = []  # 存储文本片段
+        self.metadata = []  # 存储元数据
+        self.collection_info = {}  # 存储集合信息
+
+    def add_texts(self, texts, metadata=None):
+        """添加文本向量到数据库"""
+        if not texts:
+            return []
+            
+        ids = []
+        for i, text in enumerate(texts):
+            text_id = len(self.texts)
+            self.texts.append(text)
+            
+            meta = metadata[i] if metadata and i < len(metadata) else {}
+            self.metadata.append(meta)
+            
+            ids.append(text_id)
+        
+        return ids
+    
+    def add_vectors(self, vectors, texts, metadata=None):
+        """添加向量到数据库"""
+        if len(vectors) == 0:
+            return []
+            
+        # 转换向量为numpy数组
+        if not isinstance(vectors, np.ndarray):
+            vectors = np.array(vectors, dtype=np.float32)
+        
+        # 如果是单个向量，添加一个维度
+        if len(vectors.shape) == 1:
+            vectors = vectors.reshape(1, -1)
+            
+        # 确保向量维度正确
+        if vectors.shape[1] != self.dimension:
+            raise ValueError(f"向量维度 {vectors.shape[1]} 与索引维度 {self.dimension} 不匹配")
+            
+        # 添加到FAISS索引
+        ids = self.add_texts(texts, metadata)
+        faiss.normalize_L2(vectors)  # 归一化向量
+        self.index.add(vectors)
+        
+        return ids
+    
+    def search(self, query_vector, k=5):
+        """搜索最相似的文档"""
+        if not isinstance(query_vector, np.ndarray):
+            query_vector = np.array(query_vector, dtype=np.float32)
+            
+        # 确保向量是二维的
+        if len(query_vector.shape) == 1:
+            query_vector = query_vector.reshape(1, -1)
+            
+        faiss.normalize_L2(query_vector)  # 归一化查询向量
+        distances, indices = self.index.search(query_vector, k)
+        
+        results = []
+        for i, idx in enumerate(indices[0]):
+            if idx < len(self.texts) and idx >= 0:
+                results.append({
+                    'id': int(idx),
+                    'text': self.texts[idx],
+                    'metadata': self.metadata[idx],
+                    'score': float(distances[0][i])
+                })
+        
+        return results
+    
+    def save(self, collection_name):
+        """保存索引和元数据到磁盘"""
+        collection_path = os.path.join(VECTOR_DB_DIR, collection_name)
+        if not os.path.exists(collection_path):
+            os.makedirs(collection_path)
+            
+        # 保存FAISS索引
+        index_path = os.path.join(collection_path, 'index.faiss')
+        faiss.write_index(self.index, index_path)
+        
+        # 保存文本和元数据
+        texts_path = os.path.join(collection_path, 'texts.pkl')
+        metadata_path = os.path.join(collection_path, 'metadata.pkl')
+        
+        with open(texts_path, 'wb') as f:
+            pickle.dump(self.texts, f)
+            
+        with open(metadata_path, 'wb') as f:
+            pickle.dump(self.metadata, f)
+            
+        # 更新集合信息
+        info = {
+            'dimension': self.dimension,
+            'count': len(self.texts),
+            'created_at': datetime.datetime.now().isoformat()
+        }
+        self.collection_info = info
+        
+        info_path = os.path.join(collection_path, 'info.json')
+        with open(info_path, 'w') as f:
+            json.dump(info, f)
+            
+        return collection_path
+    
+    @classmethod
+    def load(cls, collection_name):
+        """从磁盘加载索引和元数据"""
+        collection_path = os.path.join(VECTOR_DB_DIR, collection_name)
+        if not os.path.exists(collection_path):
+            raise ValueError(f"集合 {collection_name} 不存在")
+        
+        # 读取信息（先获取维度信息）
+        info_path = os.path.join(collection_path, 'info.json')
+        with open(info_path, 'r') as f:
+            info = json.load(f)
+            
+        # 使用正确的维度创建实例
+        dimension = info.get('dimension', 1024)  # 如果没有维度信息，默认使用1024
+        instance = cls(dimension=dimension)
+        
+        # 加载索引
+        index_path = os.path.join(collection_path, 'index.faiss')
+        instance.index = faiss.read_index(index_path)
+        
+        # 加载文本和元数据
+        texts_path = os.path.join(collection_path, 'texts.pkl')
+        metadata_path = os.path.join(collection_path, 'metadata.pkl')
+        
+        with open(texts_path, 'rb') as f:
+            instance.texts = pickle.load(f)
+            
+        with open(metadata_path, 'rb') as f:
+            instance.metadata = pickle.load(f)
+        
+        # 设置集合信息
+        instance.collection_info = info
+        
+        return instance
+
+# 全局变量存储加载的向量数据库
+vector_dbs = {}
+
+# 文本分段函数
+def split_text(text, method='delimiter', **kwargs):
+    """
+    将文本分段
+    
+    参数:
+    text -- 要分段的文本
+    method -- 分段方法，可选 'delimiter', 'chunk_size', 'semantic'
+    kwargs -- 其他参数，例如 delimiter, chunk_size 等
+    
+    返回:
+    分段后的文本列表
+    """
+    if method == 'delimiter':
+        delimiter = kwargs.get('delimiter', '####')
+        chunks = [chunk.strip() for chunk in text.split(delimiter) if chunk.strip()]
+        return chunks
+        
+    elif method == 'chunk_size':
+        chunk_size = kwargs.get('chunk_size', 1000)
+        overlap = kwargs.get('overlap', 0)
+        
+        if len(text) <= chunk_size:
+            return [text]
+            
+        chunks = []
+        for i in range(0, len(text), chunk_size - overlap):
+            if i + chunk_size <= len(text):
+                chunks.append(text[i:i + chunk_size])
+            else:
+                chunks.append(text[i:])
+                break
+        return chunks
+        
+    elif method == 'semantic':
+        # 简单的语义分段，按句子分割然后合并
+        sentences = re.split(r'(?<=[.!?。！？])\s+', text)
+        chunk_size = kwargs.get('chunk_size', 5)  # 每个块中的句子数
+        
+        if len(sentences) <= chunk_size:
+            return [text]
+            
+        chunks = []
+        for i in range(0, len(sentences), chunk_size):
+            chunk = ' '.join(sentences[i:i + chunk_size])
+            chunks.append(chunk)
+            
+        return chunks
+        
+    else:
+        # 默认返回原文本
+        return [text]
+
+# 获取嵌入向量
+def get_embeddings(texts):
+    """
+    获取文本的嵌入向量，使用 siliconflow 的 API，处理token限制
+    
+    参数:
+    texts -- 文本列表
+    
+    返回:
+    嵌入向量列表
+    """
+    if not texts:
+        return []
+        
+    try:
+        print(f"\n=== 获取文本嵌入向量 ===")
+        print(f"文本数量: {len(texts)}")
+        
+        # 检查 API 密钥是否存在
+        if not SILICONFLOW_API_KEY:
+            print(f"错误: 未设置 SILICONFLOW_API_KEY")
+            return []
+            
+        url = "https://api.siliconflow.cn/v1/embeddings"
+        headers = {
+            "Authorization": f"Bearer {SILICONFLOW_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        embeddings = []
+        
+        # 估算token长度的函数（简单实现）
+        def estimate_tokens(text):
+            # 粗略估计：中文每字约1个token，英文每4个字符约1个token
+            chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
+            other_chars = len(text) - chinese_chars
+            return chinese_chars + (other_chars // 4)
+        
+        # API的token上限
+        TOKEN_LIMIT = 500  # 设置为500而不是512，留一些余量
+        
+        for i, text in enumerate(texts):
+            if i < 5:  # 只打印前5个文本示例
+                print(f"获取嵌入向量: 文本[{i+1}]: {text[:50]}...")
+                
+            # 估计token数量
+            estimated_tokens = estimate_tokens(text)
+            
+            # 如果超过限制，截断文本
+            if estimated_tokens > TOKEN_LIMIT:
+                print(f"警告: 文本片段[{i+1}]超过token限制，将被截断。估计tokens: {estimated_tokens}")
+                # 按比例截断
+                truncate_ratio = TOKEN_LIMIT / estimated_tokens
+                truncate_length = int(len(text) * truncate_ratio)
+                truncated_text = text[:truncate_length]
+                print(f"  截断后长度: {len(truncated_text)} 字符")
+                text = truncated_text
+            
+            payload = {
+                "model": "BAAI/bge-large-zh-v1.5",
+                "input": text,
+                "encoding_format": "float"
+            }
+            
+            # 尝试API调用，如果失败则继续截断
+            max_retries = 3
+            retry_count = 0
+            success = False
+            
+            while not success and retry_count < max_retries:
+                try:
+                    response = requests.post(url, json=payload, headers=headers)
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        # 提取嵌入向量
+                        if 'data' in result and len(result['data']) > 0 and 'embedding' in result['data'][0]:
+                            embedding = result['data'][0]['embedding']
+                            embeddings.append(embedding)
+                            success = True
+                        else:
+                            print(f"警告: API 返回中未找到嵌入向量，返回内容: {result}")
+                            if retry_count == max_retries - 1:
+                                return []
+                    else:
+                        error_msg = f"错误: API 请求失败，状态码: {response.status_code}"
+                        
+                        # 检查是否是token限制问题
+                        if 'input must have less than 512 tokens' in response.text:
+                            # 继续截断文本
+                            text = text[:int(len(text) * 0.7)]  # 截断到原长度的70%
+                            payload["input"] = text
+                            print(f"  Token限制错误，进一步截断文本至 {len(text)} 字符")
+                        else:
+                            print(f"{error_msg}, 返回内容: {response.text}")
+                            if retry_count == max_retries - 1:
+                                return []
+                    
+                    retry_count += 1
+                    
+                except Exception as e:
+                    print(f"API调用异常: {str(e)}")
+                    retry_count += 1
+                    if retry_count == max_retries:
+                        return []
+            
+        print(f"成功获取 {len(embeddings)} 个嵌入向量")
+        print("=========================\n")
+        
+        return embeddings
+    except Exception as e:
+        print(f"获取嵌入向量时出错: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return []
+
+# 创建docs目录存储上传的文档
+DOCS_DIR = 'docs'
+if not os.path.exists(DOCS_DIR):
+    os.makedirs(DOCS_DIR)
+
+# 处理文件上传并向量化
+@app.route('/api/upload_document', methods=['POST'])
+@login_required
+def upload_document():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': '没有上传文件'}), 400
+            
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'error': '未选择文件'}), 400
+            
+        # 验证文件格式
+        if not file.filename.endswith('.txt'):
+            return jsonify({'error': '目前只支持上传txt格式文件'}), 400
+            
+        # 生成安全的文件名
+        filename = f"{uuid.uuid4()}_{secure_filename(file.filename)}"
+        filepath = os.path.join(DOCS_DIR, filename)
+        
+        # 保存文件
+        file.save(filepath)
+        
+        # 读取文件内容
+        with open(filepath, 'r', encoding='utf-8') as f:
+            text = f.read()
+            
+        # 如果文件内容为空
+        if not text.strip():
+            return jsonify({'error': '文件内容为空'}), 400
+            
+        # 使用文件名作为集合名称的一部分
+        collection_name = f"doc_{filename.split('.')[0]}"
+        
+        # 分段并向量化
+        split_method = request.form.get('split_method', 'chunk_size')
+        
+        # 修改默认分段大小，确保不超过token限制
+        # 一般来说，1个中文字符约为1个token，所以设置为400字符较为安全
+        chunk_size = int(request.form.get('chunk_size', 400))
+        overlap = int(request.form.get('overlap', 50))
+        
+        split_params = {
+            'chunk_size': chunk_size,
+            'overlap': overlap
+        }
+        
+        # 生成分段
+        chunks = split_text(text, method=split_method, **split_params)
+        
+        if not chunks:
+            return jsonify({'error': '文本分段失败，未生成任何文本块'}), 400
+            
+        # 获取嵌入向量
+        embeddings = get_embeddings(chunks)
+        
+        if not embeddings or len(embeddings) != len(chunks):
+            return jsonify({'error': f'嵌入向量生成失败: 预期{len(chunks)}个向量，得到{len(embeddings)}个'}), 500
+            
+        # 创建向量数据库
+        vector_db = VectorDB()
+        
+        # 生成元数据
+        metadata = []
+        for i, chunk in enumerate(chunks):
+            metadata.append({
+                'chunk_id': i,
+                'filename': file.filename,
+                'filepath': filepath,
+                'user_id': current_user.id,
+                'username': current_user.username,
+                'created_at': datetime.datetime.now().isoformat(),
+                'chars': len(chunk),
+                'tokens': len(chunk) // 4  # 粗略估计token数量
+            })
+            
+        # 添加向量
+        vector_db.add_vectors(embeddings, chunks, metadata)
+        
+        # 保存到磁盘
+        collection_path = vector_db.save(collection_name)
+        
+        # 添加到内存中的数据库列表
+        vector_dbs[collection_name] = vector_db
+        
+        return jsonify({
+            'success': True,
+            'filename': file.filename,
+            'collection_name': collection_name,
+            'chunks': len(chunks),
+            'path': collection_path,
+            'info': vector_db.collection_info
+        })
+        
+    except Exception as e:
+        print(f"文件上传处理错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
+
+# 获取用户上传的文档列表
+@app.route('/api/user_documents', methods=['GET'])
+@login_required
+def get_user_documents():
+    try:
+        collections = []
+        docs_info = {}
+        
+        # 扫描向量数据库目录
+        for item in os.listdir(VECTOR_DB_DIR):
+            if item.startswith('doc_'):
+                info_path = os.path.join(VECTOR_DB_DIR, item, 'info.json')
+                if os.path.exists(info_path):
+                    with open(info_path, 'r') as f:
+                        info = json.load(f)
+                    
+                    # 加载第一个chunk的元数据以获取文件信息
+                    metadata_path = os.path.join(VECTOR_DB_DIR, item, 'metadata.pkl')
+                    if os.path.exists(metadata_path):
+                        with open(metadata_path, 'rb') as f:
+                            metadata = pickle.load(f)
+                            if metadata and len(metadata) > 0:
+                                first_meta = metadata[0]
+                                if first_meta.get('user_id') == current_user.id:
+                                    collections.append({
+                                        'collection_name': item,
+                                        'filename': first_meta.get('filename', '未知文件'),
+                                        'count': info.get('count', 0),
+                                        'created_at': info.get('created_at', '')
+                                    })
+                                    
+                                    # 保存文档信息用于聊天时显示
+                                    docs_info[item] = {
+                                        'filename': first_meta.get('filename', '未知文件')
+                                    }
+        
+        # 保存到session中以便聊天时使用
+        session['user_docs'] = docs_info
+        
+        return jsonify(collections)
+                
+    except Exception as e:
+        print(f"获取用户文档列表时出错: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小智 - 登录</title>
+    <title>小斯 - 登录</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -367,7 +367,7 @@
 </head>
 <body>
     <div class="welcome-text">
-        <i class="fas fa-robot"></i> 小智欢迎您
+        <i class="fas fa-robot"></i> 小斯欢迎您
     </div>
     
     <!-- 背景装饰 -->
@@ -385,7 +385,7 @@
             <div class="app-icon">
                 <i class="fas fa-robot"></i>
             </div>
-            <h2>欢迎使用小智</h2>
+            <h2>欢迎使用小斯</h2>
             <p class="text-muted">您的智能聊天助手</p>
         </div>
         
