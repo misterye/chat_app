@@ -588,9 +588,9 @@
                         <button class="input-action-btn" title="上传文件" onclick="showFileUploadModal()">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        <button class="input-action-btn" id="doc-search-btn" title="文档检索">
-                            <i class="fas fa-book"></i>
-                        </button>
+        <button class="input-action-btn" id="doc-search-btn" title="文档检索" onclick="showDocCategoryModal()">
+            <i class="fas fa-book"></i>
+        </button>
                         <button class="send-btn" onclick="sendMessageDesktop()" title="发送">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -598,7 +598,7 @@
                 </div>
                 <div class="mobile-input-container d-flex d-md-none">
                     <div class="mobile-menu-btn-container">
-                        <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <button class="mobile-menu-btn" onclick="toggleSidebar()" title="打开菜单" aria-label="打开菜单">
                             <i class="fas fa-bars"></i>
                         </button>
                     </div>
@@ -613,7 +613,7 @@
                         <button class="input-action-btn" title="上传文件" onclick="showFileUploadModal()">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        <button class="input-action-btn" id="doc-search-btn-mobile" title="文档检索">
+                        <button class="input-action-btn" id="doc-search-btn-mobile" title="文档检索" onclick="showDocCategoryModal()">
                             <i class="fas fa-book"></i>
                         </button>
                         <button class="send-btn" onclick="sendMessageMobile()" title="发送">
@@ -679,6 +679,15 @@
                             <input class="form-control" type="file" id="documentFile" name="file" accept=".txt">
                         </div>
                         <div class="mb-3">
+                            <label for="category" class="form-label">选择类别</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="clients">客户资料</option>
+                                <option value="companies">公司资料</option>
+                                <option value="products">产品资料</option>
+                                <option value="techdocs">技术资料</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">文档分段设置</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div>
@@ -708,6 +717,34 @@
         </div>
     </div>
 
+    <!-- 添加文档检索类别选择对话框 -->
+    <div class="modal fade" id="docCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-folder-open"></i> 选择检索类别</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group">
+                        <button type="button" class="list-group-item list-group-item-action" onclick="selectDocCategory('clients')">
+                            <i class="fas fa-user me-2"></i> 客户资料
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action" onclick="selectDocCategory('companies')">
+                            <i class="fas fa-building me-2"></i> 公司资料
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action" onclick="selectDocCategory('products')">
+                            <i class="fas fa-box me-2"></i> 产品资料
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action" onclick="selectDocCategory('techdocs')">
+                            <i class="fas fa-file-code me-2"></i> 技术资料
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- 添加用户文档列表对话框 -->
     <div class="modal fade" id="userDocumentsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -740,6 +777,7 @@
         let deepThinkingMode = false; // 添加深度思考模式状态变量
         let webSearchMode = false; // 添加网络搜索模式状态变量
         let documentSearchMode = false; // 添加文档检索模式状态变量
+        let currentDocCategory = 'clients'; // 当前选择的文档类别，默认为客户资料
 
         function loadHistory() {
             fetch('/chat/history')
@@ -957,7 +995,8 @@
                     history_id: currentChatId,
                     deep_thinking: deepThinkingMode,
                     web_search: webSearchMode,
-                    doc_search: documentSearchMode
+                    doc_search: documentSearchMode,
+                    doc_category: currentDocCategory
                 })
             })
             .then(response => {
@@ -1241,7 +1280,7 @@
                 messageHTML = `
                     <img src="/static/${role === 'user' ? 'user-avatar.png' : 'bot-avatar.png'}" alt="${role}" class="avatar">
                     <div class="message-content">
-                    <button class="copy-btn copy-all" data-clipboard-text="${content.replace(/<[^>]*>/g, '')}"><i class="far fa-copy"></i></button>
+                    <button class="copy-btn copy-all" data-clipboard-text="${content.replace(/<[^>]*>/g, '')}" title="复制内容" aria-label="复制内容"><i class="far fa-copy"></i></button>
                 `;
             }
             
@@ -1487,61 +1526,123 @@
             modal.show();
         }
         
+        // 选择文档类别
+        function selectDocCategory(category) {
+            currentDocCategory = category;
+            
+            // 获取类别名称
+            const categoryNames = {
+                'clients': '客户资料',
+                'companies': '公司资料',
+                'products': '产品资料',
+                'techdocs': '技术资料'
+            };
+            
+            // 关闭类别选择对话框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('docCategoryModal'));
+            if (modal) modal.hide();
+            
+            // 检查该类别下是否有文档
+            fetch(`/api/category_documents/${category}`)
+                .then(response => response.json())
+                .then(data => {
+            const chatWindow = document.getElementById('chat-window');
+            const documents = Array.isArray(data.documents) ? data.documents : [];
+                    
+                    if (!documents || documents.length === 0) {
+                        // 如果该类别下没有文档，显示提示消息
+                        const noDocMsg = document.createElement('div');
+                        noDocMsg.className = 'message assistant-message';
+                        noDocMsg.innerHTML = `
+                            <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                            <div class="message-content">
+                                <i class="fas fa-exclamation-circle text-warning"></i> 
+                                您在<strong>${categoryNames[category]}</strong>类别下没有任何文档。是否要上传文档？
+                            </div>
+                        `;
+                        chatWindow.appendChild(noDocMsg);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                        
+                        // 询问是否要上传文档
+                        const askUploadMsg = document.createElement('div');
+                        askUploadMsg.className = 'message assistant-message';
+                        askUploadMsg.innerHTML = `
+                            <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                            <div class="message-content">
+                                <button class="btn btn-primary me-2" onclick="showFileUploadModal()">
+                                    <i class="fas fa-upload"></i> 上传文档
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetDocSearchButtonStyle()">
+                                    <i class="fas fa-times"></i> 取消
+                                </button>
+                            </div>
+                        `;
+                        chatWindow.appendChild(askUploadMsg);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                        
+                        // 不开启文档检索模式
+                        documentSearchMode = false;
+                        resetDocSearchButtonStyle();
+                    } else {
+                        // 如果有文档，显示成功消息并开启文档检索模式
+                        const systemMessageDiv = document.createElement('div');
+                        systemMessageDiv.className = 'message assistant-message';
+                        systemMessageDiv.innerHTML = `
+                            <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                            <div class="message-content">
+                                <i class="fas fa-folder-open text-primary"></i> 
+                                已选择检索类别：<strong>${categoryNames[category]}</strong>。我将从该类别的文档中查找相关信息。
+                                <br>该类别下有 ${documents.length || 0} 个文档。
+                            </div>
+                        `;
+                        chatWindow.appendChild(systemMessageDiv);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                        
+                        // 开启文档检索模式
+                        documentSearchMode = true;
+                        
+                        // 更新按钮样式
+                        const docSearchBtnDesktop = document.getElementById('doc-search-btn');
+                        const docSearchBtnMobile = document.getElementById('doc-search-btn-mobile');
+                        
+                        docSearchBtnDesktop.style.backgroundColor = '#ffffff';
+                        docSearchBtnDesktop.style.color = '#4a6cf7';
+                        docSearchBtnDesktop.style.border = '1px solid #4a6cf7';
+                        
+                        if (docSearchBtnMobile) {
+                            docSearchBtnMobile.style.backgroundColor = '#ffffff';
+                            docSearchBtnMobile.style.color = '#4a6cf7';
+                            docSearchBtnMobile.style.border = '1px solid #4a6cf7';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取类别文档失败:', error);
+                    const chatWindow = document.getElementById('chat-window');
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'message assistant-message';
+                    errorMsg.innerHTML = `
+                        <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
+                        <div class="message-content">
+                            <i class="fas fa-exclamation-triangle text-danger"></i> 
+                            检查文档失败: ${error.message}
+                        </div>
+                    `;
+                    chatWindow.appendChild(errorMsg);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    
+                    // 不开启文档检索模式
+                    documentSearchMode = false;
+                    resetDocSearchButtonStyle();
+                });
+        }
+        
         // 切换文档检索模式
         function toggleDocumentSearch(btn) {
-            documentSearchMode = !documentSearchMode;
-            
             if (documentSearchMode) {
-                // 开启文档检索模式
-                const chatWindow = document.getElementById('chat-window');
-                const systemMessageDiv = document.createElement('div');
-                systemMessageDiv.className = 'message assistant-message';
-                systemMessageDiv.innerHTML = `
-                    <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
-                    <div class="message-content">
-                        <i class="fas fa-info-circle text-primary"></i> 
-                        文档检索模式已开启。我将尝试从您上传的文档中查找相关信息来回答您的问题。
-                    </div>
-                `;
-                chatWindow.appendChild(systemMessageDiv);
-                chatWindow.scrollTop = chatWindow.scrollHeight;
+                // 如果已经开启，则关闭
+                documentSearchMode = false;
                 
-                // 加载用户文档
-                fetch('/api/user_documents')
-                    .then(response => response.json())
-                    .then(documents => {
-                        if (!documents || documents.length === 0) {
-                            // 如果没有文档，添加提示并显示上传对话框
-                            const noDocMsg = document.createElement('div');
-                            noDocMsg.className = 'message assistant-message';
-                            noDocMsg.innerHTML = `
-                                <img src="/static/bot-avatar.png" alt="assistant" class="avatar">
-                                <div class="message-content">
-                                    <i class="fas fa-exclamation-circle text-warning"></i> 
-                                    您尚未上传任何文档。请先上传文档以使用文档检索功能。
-                                </div>
-                            `;
-                            chatWindow.appendChild(noDocMsg);
-                            chatWindow.scrollTop = chatWindow.scrollHeight;
-                            
-                            // 显示上传对话框
-                            setTimeout(() => {
-                                showFileUploadModal();
-                            }, 1000);
-                            
-                            // 重置文档检索模式
-                            documentSearchMode = false;
-                            resetDocSearchButtonStyle();
-                            return;
-                        }
-                        
-                        // 更改按钮样式
-                        btn.style.backgroundColor = '#ffffff';
-                        btn.style.color = '#4a6cf7';
-                        btn.style.border = '1px solid #4a6cf7';
-                    });
-            } else {
-                // 关闭文档检索模式
                 const chatWindow = document.getElementById('chat-window');
                 const systemMessageDiv = document.createElement('div');
                 systemMessageDiv.className = 'message assistant-message';
@@ -1559,6 +1660,21 @@
                 btn.style.backgroundColor = '';
                 btn.style.color = '';
                 btn.style.border = '';
+                
+                // 同步另一个按钮
+                const otherBtn = btn.id === 'doc-search-btn' ? 
+                    document.getElementById('doc-search-btn-mobile') : 
+                    document.getElementById('doc-search-btn');
+                
+                if (otherBtn) {
+                    otherBtn.style.backgroundColor = '';
+                    otherBtn.style.color = '';
+                    otherBtn.style.border = '';
+                }
+            } else {
+                // 总是先显示类别选择对话框
+                const modal = new bootstrap.Modal(document.getElementById('docCategoryModal'));
+                modal.show();
             }
         }
         
