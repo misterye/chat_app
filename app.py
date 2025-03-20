@@ -1117,14 +1117,14 @@ def upload_document():
             chunks = []
             metadata = []
             
-            # 再次强制垃圾回收
-            gc.collect()
+        # 再次强制垃圾回收
+        gc.collect()
         
         return jsonify({
             'success': True,
             'filename': filename,
             'category': category,
-            'chunks': len(chunks),
+            'chunks': chunk_id,
             'collection_name': collection_name
         })
     

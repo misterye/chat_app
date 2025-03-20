@@ -1444,7 +1444,7 @@
                     <div class="message-content">
                         <i class="fas fa-check-circle text-success"></i> 
                         文档 "${data.filename}" 上传成功！您现在可以通过文档检索功能与文档内容进行交互。
-                        文档已被分割为 ${data.chunks} 个片段，每个片段约 ${document.getElementById('chunkSize').value} 字符。
+                        文档已被分割为 ${data.chunks || 0} 个片段，每个片段约 ${document.getElementById('chunkSize').value} 字符。
                     </div>
                 `;
                 chatWindow.appendChild(systemMessageDiv);
